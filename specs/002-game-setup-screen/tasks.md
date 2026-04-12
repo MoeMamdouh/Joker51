@@ -22,9 +22,9 @@ description: "Task list for Game Setup Screen implementation"
 
 **Purpose**: Install dependencies, create directory structure, and create the theme token stub required before any component work.
 
-- [ ] T001 Install required packages: `expo-localization`, `i18next`, `react-i18next`, `@react-native-async-storage/async-storage`, `zustand` — update `package.json` with justification comments per constitution Principle VIII
-- [ ] T002 [P] Create directory structure: `src/screens/`, `src/components/setup/`, `src/components/ui/`, `src/components/layout/`, `src/store/`, `src/contexts/`, `src/hooks/`, `src/i18n/`, `src/theme/`, and their `__tests__/` subdirectories
-- [ ] T003 Create `src/theme/tokens.ts` — define minimum token stub: `colors.background`, `colors.surface`, `colors.text.primary`, `colors.text.secondary`, `colors.text.placeholder`, `colors.accent`, `colors.error`, `colors.border`; `spacing.xs/sm/md/lg/xl`; `radii.sm/md/lg`; `typography.body/label/heading/caption` (all as named constants, no raw values in components)
+- [X] T001 Install required packages: `expo-localization`, `i18next`, `react-i18next`, `@react-native-async-storage/async-storage`, `zustand` — update `package.json` with justification comments per constitution Principle VIII
+- [X] T002 [P] Create directory structure: `src/screens/`, `src/components/setup/`, `src/components/ui/`, `src/components/layout/`, `src/store/`, `src/contexts/`, `src/hooks/`, `src/i18n/`, `src/theme/`, and their `__tests__/` subdirectories
+- [X] T003 Create `src/theme/tokens.ts` — define minimum token stub: `colors.background`, `colors.surface`, `colors.text.primary`, `colors.text.secondary`, `colors.text.placeholder`, `colors.accent`, `colors.error`, `colors.border`; `spacing.xs/sm/md/lg/xl`; `radii.sm/md/lg`; `typography.body/label/heading/caption` (all as named constants, no raw values in components)
 
 **Checkpoint**: `src/theme/tokens.ts` exists — component implementation may now begin (constitution Principle VII pre-condition cleared).
 
@@ -36,13 +36,13 @@ description: "Task list for Game Setup Screen implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 [P] Create `src/i18n/en.json` — add all 18 translation keys from `data-model.md` i18n key index with English values: `setup.title`, `setup.playerCount`, `setup.playerLabel`, `setup.playerNamePlaceholder`, `setup.roundFormat`, `setup.roundFormat.short/medium/long`, `setup.deckInfo`, `setup.deckNotice`, `setup.startButton`, `setup.resumeTitle`, `setup.resumeBody`, `setup.resumeButton`, `setup.newGameButton`, `setup.language`, `common.language.en/ar`, `validation.nameRequired`, `validation.nameTooLong`
-- [ ] T005 [P] Create `src/i18n/ar.json` — add all 18 same keys with Arabic translations (mirror structure of `en.json` exactly; both files MUST have identical key sets per constitution Principle VI)
-- [ ] T006 Create `src/i18n/index.ts` — initialize i18next with `initReactI18next`; read `@joker51/language` from AsyncStorage before init; fall back to `'en'` if absent; call `I18nManager.forceRTL(true/false)` based on stored locale
-- [ ] T007 Create `src/contexts/DirectionContext.tsx` — define `DirectionContextValue { isRTL: boolean; direction: 'ltr' | 'rtl' }`, export `DirectionContext`, `DirectionProvider` component (wraps children, reads from `languageStore.isRTL`), and `useDirection()` hook
-- [ ] T008 [P] Create `src/store/setupStore.ts` — Zustand slice per `contracts/setup-ui.md`: fields `playerCount` (default 2), `playerNames` (default `['','']`), `roundFormat` (default 4), `fieldErrors` (default `[null,null]`); actions `setPlayerCount` (clamps 2–8, resizes arrays), `setPlayerName`, `setRoundFormat`, `validateAndStart` (trims + checks each name, populates `fieldErrors`), `resetForm`
-- [ ] T009 [P] Create `src/store/languageStore.ts` — Zustand slice per `contracts/setup-ui.md`: fields `locale` (default `'en'`), `isRTL` (derived as `locale === 'ar'`); action `setLocale` (calls `i18next.changeLanguage`, writes `@joker51/language` to AsyncStorage, updates `isRTL`)
-- [ ] T010 Create `src/hooks/useSavedSession.ts` — reads `@joker51/savedSession` from AsyncStorage on mount; returns `{ session: GameState | null; clearSession(): Promise<void> }` where `clearSession` calls `AsyncStorage.removeItem('@joker51/savedSession')`
+- [X] T004 [P] Create `src/i18n/en.json` — add all 18 translation keys from `data-model.md` i18n key index with English values: `setup.title`, `setup.playerCount`, `setup.playerLabel`, `setup.playerNamePlaceholder`, `setup.roundFormat`, `setup.roundFormat.short/medium/long`, `setup.deckInfo`, `setup.deckNotice`, `setup.startButton`, `setup.resumeTitle`, `setup.resumeBody`, `setup.resumeButton`, `setup.newGameButton`, `setup.language`, `common.language.en/ar`, `validation.nameRequired`, `validation.nameTooLong`
+- [X] T005 [P] Create `src/i18n/ar.json` — add all 18 same keys with Arabic translations (mirror structure of `en.json` exactly; both files MUST have identical key sets per constitution Principle VI)
+- [X] T006 Create `src/i18n/index.ts` — initialize i18next with `initReactI18next`; read `@joker51/language` from AsyncStorage before init; fall back to `'en'` if absent; call `I18nManager.forceRTL(true/false)` based on stored locale
+- [X] T007 Create `src/contexts/DirectionContext.tsx` — define `DirectionContextValue { isRTL: boolean; direction: 'ltr' | 'rtl' }`, export `DirectionContext`, `DirectionProvider` component (wraps children, reads from `languageStore.isRTL`), and `useDirection()` hook
+- [X] T008 [P] Create `src/store/setupStore.ts` — Zustand slice per `contracts/setup-ui.md`: fields `playerCount` (default 2), `playerNames` (default `['','']`), `roundFormat` (default 4), `fieldErrors` (default `[null,null]`); actions `setPlayerCount` (clamps 2–8, resizes arrays), `setPlayerName`, `setRoundFormat`, `validateAndStart` (trims + checks each name, populates `fieldErrors`), `resetForm`
+- [X] T009 [P] Create `src/store/languageStore.ts` — Zustand slice per `contracts/setup-ui.md`: fields `locale` (default `'en'`), `isRTL` (derived as `locale === 'ar'`); action `setLocale` (calls `i18next.changeLanguage`, writes `@joker51/language` to AsyncStorage, updates `isRTL`)
+- [X] T010 Create `src/hooks/useSavedSession.ts` — reads `@joker51/savedSession` from AsyncStorage on mount; returns `{ session: GameState | null; clearSession(): Promise<void> }` where `clearSession` calls `AsyncStorage.removeItem('@joker51/savedSession')`
 
 **Checkpoint**: Foundation complete — all four user story phases can now begin.
 
@@ -54,17 +54,17 @@ description: "Task list for Game Setup Screen implementation"
 
 **Independent Test**: Complete setup form with 2 players and tap Start → valid GameState created, navigation to `/game` triggered. Resume prompt appears when `savedSession` exists.
 
-- [ ] T011 [P] [US1] Create `src/components/ui/Button.tsx` — generic pressable button consuming `colors.accent`, `colors.text.primary`, `radii.md`, `spacing.md` tokens; accepts `label: string`, `onPress`, `disabled?: boolean`, `variant?: 'primary' | 'secondary'`, `testID?`
-- [ ] T012 [P] [US1] Create `src/components/ui/TextInput.tsx` — generic text input consuming `colors.surface`, `colors.border`, `colors.text.primary`, `colors.text.placeholder`, `radii.sm`, `spacing.sm` tokens; accepts `value`, `onChangeText`, `placeholder?`, `maxLength?`, `error?` (string | null shows error text in `colors.error`), `testID?`
-- [ ] T013 [P] [US1] Create `src/components/layout/SafeScrollView.tsx` — wraps `SafeAreaView` + `ScrollView` with `KeyboardAvoidingView`; accepts `children`, uses `colors.background` token for background
-- [ ] T014 [US1] Create `src/components/setup/PlayerCountStepper.tsx` per `contracts/setup-ui.md` — decrement `−` and increment `+` buttons using `ui/Button`; decrement disabled at `value === 2`, increment disabled at `value === 8`; displays current count; includes `accessibilityLabel` on both buttons
-- [ ] T015 [US1] Create `src/components/setup/PlayerNameInput.tsx` per `contracts/setup-ui.md` — uses `ui/TextInput` with `maxLength={20}`; renders row label `t('setup.playerLabel', { number: index + 1 })`; shows `error` text below field when non-null; respects `isRTL` from `useDirection()`
-- [ ] T016 [US1] Create `src/components/setup/ResumeGamePrompt.tsx` per `contracts/setup-ui.md` — modal-style overlay with `t('setup.resumeTitle')`, `t('setup.resumeBody')`, "Resume Game" primary button (calls `onResume`), "New Game" secondary button (calls `onNewGame`)
-- [ ] T017 [US1] Create `src/screens/SetupScreen.tsx` — mount: call `useSavedSession`; if session exists render `ResumeGamePrompt` (onResume → navigate `/game`; onNewGame → `clearSession()` then show form); form: `PlayerCountStepper` + `PlayerNameInput` × count + `Button` for Start; Start calls `setupStore.validateAndStart()` → on valid: call `initGame(config)` from engine via store action → navigate to `/game` with serialized GameState; use `SafeScrollView`; all strings via `useTranslation()`; layout direction from `useDirection()`
-- [ ] T018 [P] [US1] Write `src/components/setup/__tests__/PlayerCountStepper.test.tsx` — tests per quickstart.md Component Isolation: render at value=2 (decrement disabled), render at value=8 (increment disabled), tap increment calls onChange(3), tap decrement at value=3 calls onChange(2)
-- [ ] T019 [P] [US1] Write `src/components/setup/__tests__/PlayerNameInput.test.tsx` — tests: `error=null` renders no error text; `error="Name is required"` renders error below field; input with 20 chars rejects additional input via maxLength
-- [ ] T020 [P] [US1] Write `src/components/setup/__tests__/ResumeGamePrompt.test.tsx` — tests: renders resume title and body text; tapping "Resume Game" calls `onResume`; tapping "New Game" calls `onNewGame`
-- [ ] T021 [US1] Write `src/screens/__tests__/SetupScreen.test.tsx` — integration tests per quickstart.md Scenarios 1, 3, 5, 6: happy path (2 players → Start enabled → navigation called); whitespace name (Start disabled); resume prompt shown when savedSession exists; "New Game" clears session and shows blank form
+- [X] T011 [P] [US1] Create `src/components/ui/Button.tsx` — generic pressable button consuming `colors.accent`, `colors.text.primary`, `radii.md`, `spacing.md` tokens; accepts `label: string`, `onPress`, `disabled?: boolean`, `variant?: 'primary' | 'secondary'`, `testID?`
+- [X] T012 [P] [US1] Create `src/components/ui/TextInput.tsx` — generic text input consuming `colors.surface`, `colors.border`, `colors.text.primary`, `colors.text.placeholder`, `radii.sm`, `spacing.sm` tokens; accepts `value`, `onChangeText`, `placeholder?`, `maxLength?`, `error?` (string | null shows error text in `colors.error`), `testID?`
+- [X] T013 [P] [US1] Create `src/components/layout/SafeScrollView.tsx` — wraps `SafeAreaView` + `ScrollView` with `KeyboardAvoidingView`; accepts `children`, uses `colors.background` token for background
+- [X] T014 [US1] Create `src/components/setup/PlayerCountStepper.tsx` per `contracts/setup-ui.md` — decrement `−` and increment `+` buttons using `ui/Button`; decrement disabled at `value === 2`, increment disabled at `value === 8`; displays current count; includes `accessibilityLabel` on both buttons
+- [X] T015 [US1] Create `src/components/setup/PlayerNameInput.tsx` per `contracts/setup-ui.md` — uses `ui/TextInput` with `maxLength={20}`; renders row label `t('setup.playerLabel', { number: index + 1 })`; shows `error` text below field when non-null; respects `isRTL` from `useDirection()`
+- [X] T016 [US1] Create `src/components/setup/ResumeGamePrompt.tsx` per `contracts/setup-ui.md` — modal-style overlay with `t('setup.resumeTitle')`, `t('setup.resumeBody')`, "Resume Game" primary button (calls `onResume`), "New Game" secondary button (calls `onNewGame`)
+- [X] T017 [US1] Create `src/screens/SetupScreen.tsx` — mount: call `useSavedSession`; if session exists render `ResumeGamePrompt` (onResume → navigate `/game`; onNewGame → `clearSession()` then show form); form: `PlayerCountStepper` + `PlayerNameInput` × count + `Button` for Start; Start calls `setupStore.validateAndStart()` → on valid: call `initGame(config)` from engine via store action → navigate to `/game` with serialized GameState; use `SafeScrollView`; all strings via `useTranslation()`; layout direction from `useDirection()`
+- [X] T018 [P] [US1] Write `src/components/setup/__tests__/PlayerCountStepper.test.tsx` — tests per quickstart.md Component Isolation: render at value=2 (decrement disabled), render at value=8 (increment disabled), tap increment calls onChange(3), tap decrement at value=3 calls onChange(2)
+- [X] T019 [P] [US1] Write `src/components/setup/__tests__/PlayerNameInput.test.tsx` — tests: `error=null` renders no error text; `error="Name is required"` renders error below field; input with 20 chars rejects additional input via maxLength
+- [X] T020 [P] [US1] Write `src/components/setup/__tests__/ResumeGamePrompt.test.tsx` — tests: renders resume title and body text; tapping "Resume Game" calls `onResume`; tapping "New Game" calls `onNewGame`
+- [X] T021 [US1] Write `src/screens/__tests__/SetupScreen.test.tsx` — integration tests per quickstart.md Scenarios 1, 3, 5, 6: happy path (2 players → Start enabled → navigation called); whitespace name (Start disabled); resume prompt shown when savedSession exists; "New Game" clears session and shows blank form
 
 **Checkpoint**: US1 fully functional — game session can be created and started from setup screen.
 
@@ -76,9 +76,9 @@ description: "Task list for Game Setup Screen implementation"
 
 **Independent Test**: Set `playerCount` to 2 → no notice; to 5 → "2 decks required"; to 7 → "3 decks required"; back to 3 → notice gone.
 
-- [ ] T022 [US2] Create `src/components/setup/DeckCountNotice.tsx` per `contracts/setup-ui.md` — returns `null` when `deckCount === 1`; renders info banner using `colors.surface`, `colors.accent` tokens with `t('setup.deckNotice', { count: deckCount })` when `deckCount >= 2`; accepts `deckCount: number` and `testID?`
-- [ ] T023 [US2] Integrate `DeckCountNotice` into `src/screens/SetupScreen.tsx` — import component; pass `deckCount={deckCountForPlayers(playerCount)}` (imported from engine via store, not direct import); render between PlayerCountStepper and name fields
-- [ ] T024 [P] [US2] Write `src/components/setup/__tests__/DeckCountNotice.test.tsx` — tests per quickstart.md Scenario 2 and Component Isolation: `deckCount=1` renders null; `deckCount=2` renders "2 decks required"; `deckCount=3` renders "3 decks required"
+- [X] T022 [US2] Create `src/components/setup/DeckCountNotice.tsx` per `contracts/setup-ui.md` — returns `null` when `deckCount === 1`; renders info banner using `colors.surface`, `colors.accent` tokens with `t('setup.deckNotice', { count: deckCount })` when `deckCount >= 2`; accepts `deckCount: number` and `testID?`
+- [X] T023 [US2] Integrate `DeckCountNotice` into `src/screens/SetupScreen.tsx` — import component; pass `deckCount={deckCountForPlayers(playerCount)}` (imported from engine via store, not direct import); render between PlayerCountStepper and name fields
+- [X] T024 [P] [US2] Write `src/components/setup/__tests__/DeckCountNotice.test.tsx` — tests per quickstart.md Scenario 2 and Component Isolation: `deckCount=1` renders null; `deckCount=2` renders "2 decks required"; `deckCount=3` renders "3 decks required"
 
 **Checkpoint**: Deck notice reacts to all player count changes with no extra tap.
 
@@ -90,9 +90,9 @@ description: "Task list for Game Setup Screen implementation"
 
 **Independent Test**: Render selector → Short highlighted; tap Medium → `onChange(8)` fired, Medium highlighted; tap Long then Start → game configured for 12 rounds.
 
-- [ ] T025 [US3] Create `src/components/setup/RoundFormatSelector.tsx` per `contracts/setup-ui.md` — renders three tappable options: `t('setup.roundFormat.short')`, `t('setup.roundFormat.medium')`, `t('setup.roundFormat.long')`; selected option styled with `colors.accent` token; calls `onChange(4 | 8 | 12)` on tap; accepts `value: 4 | 8 | 12`, `onChange`, `testID?`
-- [ ] T026 [US3] Integrate `RoundFormatSelector` into `src/screens/SetupScreen.tsx` — import; bind to `setupStore.roundFormat` and `setupStore.setRoundFormat`; render below deck notice; default value 4 (already in store default)
-- [ ] T027 [P] [US3] Write `src/components/setup/__tests__/RoundFormatSelector.test.tsx` — tests per quickstart.md Component Isolation: default render shows Short (4) highlighted; tap Medium calls `onChange(8)`; selected option has distinct style
+- [X] T025 [US3] Create `src/components/setup/RoundFormatSelector.tsx` per `contracts/setup-ui.md` — renders three tappable options: `t('setup.roundFormat.short')`, `t('setup.roundFormat.medium')`, `t('setup.roundFormat.long')`; selected option styled with `colors.accent` token; calls `onChange(4 | 8 | 12)` on tap; accepts `value: 4 | 8 | 12`, `onChange`, `testID?`
+- [X] T026 [US3] Integrate `RoundFormatSelector` into `src/screens/SetupScreen.tsx` — import; bind to `setupStore.roundFormat` and `setupStore.setRoundFormat`; render below deck notice; default value 4 (already in store default)
+- [X] T027 [P] [US3] Write `src/components/setup/__tests__/RoundFormatSelector.test.tsx` — tests per quickstart.md Component Isolation: default render shows Short (4) highlighted; tap Medium calls `onChange(8)`; selected option has distinct style
 
 **Checkpoint**: Round format selection fully functional; correct totalRounds flows into GameConfig.
 
@@ -104,10 +104,10 @@ description: "Task list for Game Setup Screen implementation"
 
 **Independent Test**: Tap AR → all labels re-render in Arabic + RTL layout within 300ms; relaunch → Arabic still active (quickstart.md Scenarios 4 and 7).
 
-- [ ] T028 [US4] Create `src/components/setup/LanguageSelector.tsx` per `contracts/setup-ui.md` — two-option toggle (EN / AR) using `t('common.language.en')` and `t('common.language.ar')`; selected option styled with `colors.accent`; calls `onChange('en' | 'ar')` on tap; accepts `value: 'en' | 'ar'`, `onChange`, `testID?`
-- [ ] T029 [US4] Wire `LanguageSelector` into `src/screens/SetupScreen.tsx` — import; read `locale` from `languageStore`; call `languageStore.setLocale(locale)` on change; render in setup form header area; label with `t('setup.language')`
-- [ ] T030 [US4] Wire `DirectionProvider` and i18n initialization into app root `app/_layout.tsx` — wrap root with `<DirectionProvider>`; call `i18n/index.ts` init (reads AsyncStorage for language) in root layout before render; ensure `I18nManager.forceRTL` is applied on cold start
-- [ ] T031 [P] [US4] Write `src/components/setup/__tests__/LanguageSelector.test.tsx` — tests: `value='en'` shows EN selected; tap AR calls `onChange('ar')`; both options render with correct translated labels
+- [X] T028 [US4] Create `src/components/setup/LanguageSelector.tsx` per `contracts/setup-ui.md` — two-option toggle (EN / AR) using `t('common.language.en')` and `t('common.language.ar')`; selected option styled with `colors.accent`; calls `onChange('en' | 'ar')` on tap; accepts `value: 'en' | 'ar'`, `onChange`, `testID?`
+- [X] T029 [US4] Wire `LanguageSelector` into `src/screens/SetupScreen.tsx` — import; read `locale` from `languageStore`; call `languageStore.setLocale(locale)` on change; render in setup form header area; label with `t('setup.language')`
+- [X] T030 [US4] Wire `DirectionProvider` and i18n initialization into app root `app/_layout.tsx` — wrap root with `<DirectionProvider>`; call `i18n/index.ts` init (reads AsyncStorage for language) in root layout before render; ensure `I18nManager.forceRTL` is applied on cold start
+- [X] T031 [P] [US4] Write `src/components/setup/__tests__/LanguageSelector.test.tsx` — tests: `value='en'` shows EN selected; tap AR calls `onChange('ar')`; both options render with correct translated labels
 
 **Checkpoint**: Language switch instant (< 300ms), RTL layout active, preference persisted.
 
@@ -117,8 +117,8 @@ description: "Task list for Game Setup Screen implementation"
 
 **Purpose**: Type safety, translation completeness, and platform verification across all four stories.
 
-- [ ] T032 [P] Run `tsc --noEmit` and resolve all TypeScript type errors — verify `GameConfig` passed to `initGame()` exactly matches engine type from `src/engine/types.ts`
-- [ ] T033 [P] Audit translation key completeness — verify `en.json` and `ar.json` have identical key sets (all 18 keys from `data-model.md` i18n key index); add any missing keys
+- [X] T032 [P] Run `tsc --noEmit` and resolve all TypeScript type errors — verify `GameConfig` passed to `initGame()` exactly matches engine type from `src/engine/types.ts`
+- [X] T033 [P] Audit translation key completeness — verify `en.json` and `ar.json` have identical key sets (all 18 keys from `data-model.md` i18n key index); add any missing keys
 - [ ] T034 Manual smoke test on iOS Simulator — run all 7 quickstart.md scenarios; verify no visual defects at 320 pt and 430 pt widths (SC-006)
 - [ ] T035 Manual smoke test on Android Emulator — repeat all 7 quickstart.md scenarios; verify RTL layout and deck notice on Android specifically
 

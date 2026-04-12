@@ -1,0 +1,30 @@
+{
+  "setup": {
+    "title": "New Game",
+    "playerCount": "Number of Players",
+    "playerLabel": "Player {{number}}",
+    "playerNamePlaceholder": "Enter name",
+    "roundFormat": "Round Format",
+    "roundFormat.short": "Short (4 rounds)",
+    "roundFormat.medium": "Medium (8 rounds)",
+    "roundFormat.long": "Long (12 rounds)",
+    "deckInfo": "1 deck",
+    "deckNotice": "{{count}} decks required",
+    "startButton": "Start Game",
+    "resumeTitle": "Resume Game?",
+    "resumeBody": "You have an unfinished game. Continue or start a new one?",
+    "resumeButton": "Resume Game",
+    "newGameButton": "New Game",
+    "language": "Language"
+  },
+  "common": {
+    "language": {
+      "en": "English",
+      "ar": "Arabic"
+    }
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name must be 20 characters or fewer"
+  }
+}

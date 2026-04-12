@@ -1,0 +1,30 @@
+{
+  "setup": {
+    "title": "لعبة جديدة",
+    "playerCount": "عدد اللاعبين",
+    "playerLabel": "اللاعب {{number}}",
+    "playerNamePlaceholder": "أدخل الاسم",
+    "roundFormat": "صيغة الجولات",
+    "roundFormat.short": "قصيرة (4 جولات)",
+    "roundFormat.medium": "متوسطة (8 جولات)",
+    "roundFormat.long": "طويلة (12 جولة)",
+    "deckInfo": "ورقة واحدة",
+    "deckNotice": "{{count}} ورقات مطلوبة",
+    "startButton": "ابدأ اللعبة",
+    "resumeTitle": "استئناف اللعبة؟",
+    "resumeBody": "لديك لعبة غير مكتملة. هل تريد الاستمرار أم بدء لعبة جديدة؟",
+    "resumeButton": "استئناف اللعبة",
+    "newGameButton": "لعبة جديدة",
+    "language": "اللغة"
+  },
+  "common": {
+    "language": {
+      "en": "الإنجليزية",
+      "ar": "العربية"
+    }
+  },
+  "validation": {
+    "nameRequired": "الاسم مطلوب",
+    "nameTooLong": "يجب ألا يتجاوز الاسم 20 حرفاً"
+  }
+}
