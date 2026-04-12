@@ -21,8 +21,10 @@ A player who has drawn a card selects one or more valid combinations from their 
 3. **Given** I select cards that do not form a valid sequence or set (e.g., mismatched suits in a sequence, duplicate suit in a set), **When** I attempt to meld, **Then** an error describes the invalid combination and no cards are moved.
 4. **Given** I include two Jokers in a single combination during my opening meld, **When** I attempt to meld, **Then** an error states that only one Joker is allowed per combination in an opening meld.
 5. **Given** I include a combination with fewer than 3 cards, **When** I attempt to meld, **Then** an error states the minimum size requirement.
-6. **Given** I have already melded in this game, **When** I view the board, **Then** the Meld action is no longer available to me.
+6. **Given** I have already melded in this game, **When** I stage a new combination and confirm, **Then** the combination is placed on the table without any 51-point requirement (additional melds have no threshold).
 7. **Given** I select combinations totalling exactly 51 pts with valid structure, **When** I confirm meld, **Then** the meld succeeds.
+8. **Given** I drew from the discard pile before making my initial meld, **When** I attempt to confirm an initial meld that does not include the drawn card, **Then** the meld is rejected with an error stating the drawn card must be used in this meld.
+9. **Given** I drew from the discard pile before making my initial meld and I include the drawn card in my combinations, **When** I confirm meld, **Then** the meld succeeds normally.
 
 ---
 
@@ -90,9 +92,12 @@ During their turn, a melded player may reclaim a Joker from any table combinatio
 - What if a Joker is claimed from a 3-card sequence? → Allowed — the player provides the 1 natural card the Joker represents; the sequence count stays at 3 (1-for-1 swap).
 - What if the same rank card appears in multiple table sets (multi-deck game)? → Each set is independent; a card can be added to any set where it fills a missing suit in that specific set.
 - Can a player meld and lay off in the same turn? → Yes — sequential: the player submits their initial meld first (one confirmation; cards leave hand and table updates immediately), then may select further cards from their remaining hand and lay off as a separate action within the same turn. The two steps are not bundled into a single submission.
+- Can a player who has already made their initial meld place new combinations on the table? → Yes — after the initial meld, a player may stage and confirm additional valid combinations in the same or any subsequent turn. No point threshold applies to these additional placements.
 - What if a player's opening meld includes a combination whose Joker they could claim from the table? → Claiming must be resolved before or after the meld action, not during; the claimed Joker may be incorporated into the opening meld if claimed first.
 - How is a Joker's identity resolved in a set at claim time? → The player must supply all remaining missing suit cards for the set. In a 3-natural-card set (`9♠ 9♥ 9♦ [Joker]`), exactly 1 suit is missing — the player provides that card and the Joker is freed. In a 2-natural-card set (`9♠ 9♥ [Joker]`), 2 suits are missing — the player must provide both; providing only one is rejected. In sequences the Joker's identity is always unambiguous (determined by its position), so 1 card is always sufficient.
 - What is the Ace's position in a sequence for lay-off? → Ace may only be at the low end (`A-2-3`) or the high end (`Q-K-A`); adding to a `K-A` sequence from the high end is not allowed (no wraparound).
+- What happens if a non-melded player draws from the discard pile and then fails to use that card in their initial meld? → The meld is rejected with error `DRAWN_DISCARD_NOT_IN_MELD`. The player must either include the drawn card in their meld or cancel staging and play differently.
+- Can a player who is already melded freely draw from the discard pile without restriction? → Yes — the discard draw restriction applies only before the player's initial meld. Once a player is melded, they may draw from the discard pile freely.
 
 ## Requirements
 
@@ -117,6 +122,8 @@ During their turn, a melded player may reclaim a Joker from any table combinatio
 - **FR-017**: The system MUST update the table display immediately after any meld, lay-off, or Joker claim.
 - **FR-018**: The system MUST present descriptive, player-readable error messages for all rejected meld, lay-off, and claim attempts, identifying the specific rule violated.
 - **FR-019**: The system MUST enforce the Ace no-wraparound rule in sequence validation for both initial melds and lay-offs.
+- **FR-020**: The system MUST allow a player who has already completed their initial meld to stage and confirm additional combinations on the table in the same or any subsequent turn, with no minimum point threshold.
+- **FR-021**: The system MUST track whether a player drew from the discard pile before making their initial meld. If so, the initial meld submission MUST include that drawn card in at least one of the staged combinations; if not, the entire meld is rejected with a `DRAWN_DISCARD_NOT_IN_MELD` error and no cards leave the player's hand. This restriction does NOT apply to players who have already completed their initial meld.
 
 ### Key Entities
 
@@ -137,12 +144,16 @@ During their turn, a melded player may reclaim a Joker from any table combinatio
 - **SC-005**: A player can meld and then lay off cards in the same turn with no screen navigation between the two steps — the meld confirms, the table updates, and lay-off selection is immediately available.
 - **SC-006**: After a Joker claim the claimed Joker is immediately available in the player's hand for use within the same turn.
 - **SC-007**: All table combination rules (sequence direction, set suit uniqueness, Ace position, Joker limit in opening meld) are correctly enforced across all test scenarios with zero rule violations passing undetected.
+- **SC-008**: A player who has completed their initial meld can immediately stage and place additional combinations in the same turn — the "Stage" affordance remains available and no 51-point check is applied.
+- **SC-009**: If a player drew from the discard pile before their initial meld, an attempt to confirm a meld that omits the drawn card produces a specific, readable error; the player's hand and the table are unchanged.
 
 ## Assumptions
 
 - The turn flow (draw → act → discard) is managed by Phase 3 (Game Board Screen); this feature defines the validation and state rules for the meld and table interaction mechanics that occur within the ACTING phase.
 - Card selection UI is provided by the game board screen; this feature's scope is the business rules governing what is and is not a valid meld, lay-off, or Joker claim.
-- The 51-point threshold applies exclusively to the initial meld; there is no point threshold for subsequent lay-offs.
+- The 51-point threshold applies exclusively to the initial meld; additional combinations placed after the initial meld and lay-offs have no point threshold.
+- After their initial meld, a player may place additional new combinations on the table (with any valid structure, no minimum points) in addition to laying off individual cards on existing combinations.
+- If a player draws from the discard pile before making their initial meld, they must include that drawn card in their initial meld on the same turn; this restriction does not apply to already-melded players.
 - A player may meld and lay off in the same turn via sequential steps: meld is submitted and confirmed first, then lay-off actions follow using the remaining hand (Steps 2 and 3 of the turn flow are combinable but sequential, not bundled).
 - The Joker's substituted card identity within a combination is determined by the combination's structure; if ambiguous (e.g., a set missing two suits), the player selects which suit the Joker represents at claim time.
 - Reorganising existing table combinations (splitting, merging, rearranging cards between combinations) is out of scope — only adding cards to existing combinations is supported.
@@ -158,3 +169,5 @@ During their turn, a melded player may reclaim a Joker from any table combinatio
 - Q: How is a Joker's identity in a set resolved at claim time, and how many cards must the player supply? → A: The player must supply ALL remaining missing suit cards for the set to complete it. In a 3-natural-card set (1 suit missing), 1 card is required. In a 2-natural-card set (2 suits missing), both missing suit cards are required — providing only one is rejected. In sequences the Joker's position determines its identity, so exactly 1 card is always sufficient.
 - Q: In what order are players' combination groups displayed on the table when multiple players have melded? → A: Turn order — groups are displayed in the same sequence as the player list established at game setup, from first to last player, regardless of which player melded first.
 - Q: If a player submits an initial meld with multiple combinations and one is invalid, does the entire meld fail or only the invalid combination? → A: All-or-nothing — the entire submission is rejected if any combination is invalid; no cards leave the player's hand. The error message identifies the specific invalid combination.
+- Q: After a player completes their initial meld, can they place entirely new combinations (not just lay off individual cards)? → A: Yes — after the initial meld, a player may stage and confirm any number of new valid combinations with no point minimum. The same "Stage" affordance is used; this is treated as a separate engine action (`placeCombinations`) distinct from the initial meld.
+- Q: What happens when a non-melded player draws from the discard pile? → A: The drawn card is tracked in turn state (`discardDrawnBeforeMeld`). When the player submits their initial meld, the engine verifies the drawn card appears in at least one combination; if not, the entire meld is rejected with `DRAWN_DISCARD_NOT_IN_MELD`. The restriction clears automatically when the turn ends.

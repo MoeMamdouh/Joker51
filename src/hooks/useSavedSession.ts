@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GameState } from '../engine/types';
+import { sortCombinationCards } from '../engine';
 
 const SESSION_KEY = '@joker51/savedSession';
 
@@ -19,7 +20,18 @@ export function useSavedSession(): UseSavedSessionResult {
       .then(raw => {
         if (raw) {
           try {
-            setSession(JSON.parse(raw) as GameState);
+            const parsed = JSON.parse(raw) as GameState;
+            const combinations = parsed.tableState?.combinations ?? [];
+            const migrated: GameState = {
+              ...parsed,
+              tableState: {
+                combinations: combinations.map(combo => ({
+                  ...combo,
+                  cards: sortCombinationCards(combo.cards, combo.type),
+                })),
+              },
+            };
+            setSession(migrated);
           } catch {
             setSession(null);
           }

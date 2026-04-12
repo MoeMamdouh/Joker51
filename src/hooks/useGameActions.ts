@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { draw } from '../engine/actions/draw';
 import { placeInitialMeld } from '../engine/actions/meld';
+import { placeCombinations } from '../engine/actions/placeCombinations';
 import { layOff } from '../engine/actions/layOff';
 import { discard, startNextRound as engineStartNextRound } from '../engine/actions/discard';
 import { claimJoker } from '../engine/actions/claimJoker';
@@ -27,6 +28,7 @@ const ERROR_CODE_MAP: Record<string, string> = {
   JOKER_CLAIM_WRONG_CARD: 'jokerClaimWrongCard',
   JOKER_CLAIM_BREAKS_COMBINATION: 'jokerClaimBreaks',
   JOKER_CLAIM_AMBIGUOUS_SET: 'jokerClaimAmbiguousSet',
+  DRAWN_DISCARD_NOT_IN_MELD: 'drawnDiscardNotInMeld',
   DISCARD_REQUIRED_TO_WIN: 'discardRequiredToWin',
   CARD_NOT_IN_HAND: 'cardNotInHand',
   COMBINATION_NOT_ON_TABLE: 'combinationNotOnTable',
@@ -85,10 +87,10 @@ export function useGameActions(): UseGameActionsReturn {
 
   function placeMeld(combinations: Card[][]): GameActionResult {
     if (!currentGame) return { error: null };
-    const result = placeInitialMeld(currentGame, {
-      playerId: currentGame.turnState.activePlayerId,
-      combinations,
-    });
+    const playerId = currentGame.turnState.activePlayerId;
+    const hasMelded = currentGame.meldedPlayerIds.includes(playerId);
+    const action = hasMelded ? placeCombinations : placeInitialMeld;
+    const result = action(currentGame, { playerId, combinations });
     if (!result.success || !result.state) return errorResult(result.error!);
     persist(result.state);
     return { error: null };

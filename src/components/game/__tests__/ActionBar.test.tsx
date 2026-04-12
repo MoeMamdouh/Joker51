@@ -11,7 +11,6 @@ jest.mock('react-i18next', () => ({
         'game.actions.confirmMeld': 'Confirm Meld',
         'game.actions.cancelMeld': 'Cancel',
         'game.actions.discard': 'Discard',
-        'game.actions.layOff': 'Lay Off',
         'game.actions.claimJoker': 'Claim Joker',
       };
       return map[key] ?? key;
@@ -36,7 +35,6 @@ const defaultProps = {
   onStage: noop,
   onCancelMeld: noop,
   onDiscard: noop,
-  onLayOff: noop,
   onClaimJoker: noop,
 };
 
@@ -68,8 +66,7 @@ describe('ActionBar', () => {
     expect(isDisabled(getByTestId('btn-stage'))).toBe(true);
     // Discard enabled
     expect(isDisabled(getByTestId('btn-discard'))).toBe(false);
-    // No lay-off when not melded
-    expect(queryByTestId('btn-lay-off')).toBeNull();
+    // No confirm meld when not melded
     // No confirm meld when not staging
     expect(queryByTestId('btn-meld')).toBeNull();
   });
@@ -91,8 +88,8 @@ describe('ActionBar', () => {
     expect(queryByTestId('btn-cancel-meld')).toBeNull();
   });
 
-  it('shows LayOff + Discard + ClaimJoker when melded with canClaimJoker', () => {
-    const { getByTestId, queryByTestId } = render(
+  it('shows Stage + Discard + ClaimJoker when melded with canClaimJoker', () => {
+    const { getByTestId } = render(
       <ActionBar
         {...defaultProps}
         phase={TurnPhase.ACTING}
@@ -101,24 +98,9 @@ describe('ActionBar', () => {
         canClaimJoker={true}
       />
     );
-    expect(getByTestId('btn-lay-off')).toBeTruthy();
+    expect(getByTestId('btn-stage')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
     expect(getByTestId('btn-claim-joker')).toBeTruthy();
-    // No Stage button after first meld
-    expect(queryByTestId('btn-stage')).toBeNull();
-  });
-
-  it('does not show LayOff when not yet melded', () => {
-    const { queryByTestId } = render(
-      <ActionBar
-        {...defaultProps}
-        phase={TurnPhase.ACTING}
-        hasMelded={false}
-        hasSelectedCards={true}
-        canClaimJoker={false}
-      />
-    );
-    expect(queryByTestId('btn-lay-off')).toBeNull();
   });
 
   // Phase 4 staging tests
@@ -155,8 +137,8 @@ describe('ActionBar', () => {
     expect(isDisabled(getByTestId('btn-meld'))).toBe(false);
   });
 
-  it('ACTING + melded: Stage button not shown, unchanged lay-off/discard/claim behavior', () => {
-    const { queryByTestId, getByTestId } = render(
+  it('ACTING + melded: Stage button shown (additional melds allowed), discard also shown', () => {
+    const { getByTestId } = render(
       <ActionBar
         {...defaultProps}
         phase={TurnPhase.ACTING}
@@ -167,8 +149,7 @@ describe('ActionBar', () => {
         meldReady={false}
       />
     );
-    expect(queryByTestId('btn-stage')).toBeNull();
-    expect(getByTestId('btn-lay-off')).toBeTruthy();
+    expect(getByTestId('btn-stage')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
   });
 });

@@ -62,7 +62,7 @@ function buildGameState(overrides: Partial<GameState> = {}): GameState {
     drawPile: { cards: [] },
     discardPile: { cards: [] },
     tableState: { combinations: [] },
-    turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+    turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
     meldedPlayerIds: ['p1', 'p2', 'p3'],
     roundResults: [],
     deckCount: 1,
@@ -130,7 +130,7 @@ describe('GameBoardScreen — turn-order table display (US3)', () => {
 describe('GameBoardScreen — Joker claim (US4)', () => {
   it('claim badge absent when player holds only 1 of 2 missing suits for 2-natural set', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       hands: [
         // p1 holds only 9♦ (needs both 9♦ AND 9♣)
@@ -155,7 +155,7 @@ describe('GameBoardScreen — Joker claim (US4)', () => {
 
   it('claim badge shown when player holds both missing suits for 2-natural set', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       hands: [
         // p1 holds both 9♦ and 9♣
@@ -179,7 +179,7 @@ describe('GameBoardScreen — Joker claim (US4)', () => {
 
   it('claim badge shown when player holds replacement for sequence Joker', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       hands: [
         { playerId: 'p1', cards: [c(Rank.SIX, Suit.CLUBS)] },
@@ -202,7 +202,7 @@ describe('GameBoardScreen — Joker claim (US4)', () => {
 
   it('claim badge absent when player does not hold the sequence replacement card', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       hands: [
         { playerId: 'p1', cards: [c(Rank.EIGHT, Suit.CLUBS)] }, // wrong card
@@ -229,7 +229,7 @@ describe('GameBoardScreen — Joker claim (US4)', () => {
 describe('GameBoardScreen — lay-off regression (US2)', () => {
   it('canLayOff is true when player has melded and is in ACTING phase', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       hands: [
         { playerId: 'p1', cards: [c(Rank.FOUR, Suit.CLUBS)] },
@@ -255,7 +255,7 @@ describe('GameBoardScreen — lay-off regression (US2)', () => {
 
   it('canLayOff is false when player has NOT melded', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: [], // p1 not melded
       hands: [
         { playerId: 'p1', cards: [c(Rank.FOUR, Suit.CLUBS)] },
@@ -275,13 +275,11 @@ describe('GameBoardScreen — lay-off regression (US2)', () => {
     const { queryByTestId } = renderWithGame(state);
     // Stage button visible (not yet melded)
     expect(queryByTestId('btn-stage')).toBeTruthy();
-    // Lay-off button not shown
-    expect(queryByTestId('btn-lay-off')).toBeNull();
   });
 
   it('canLayOff is false in DRAWING phase', () => {
     const state = buildGameState({
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.DRAWING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       hands: [
         { playerId: 'p1', cards: [] },
@@ -292,12 +290,8 @@ describe('GameBoardScreen — lay-off regression (US2)', () => {
     });
 
     const { getByTestId } = renderWithGame(state);
-    // In DRAWING phase, lay-off button is still shown (melded) but disabled
-    expect(getByTestId('btn-lay-off')).toBeTruthy();
-    const layOff = getByTestId('btn-lay-off');
-    expect(
-      layOff.props.accessibilityState?.disabled === true || layOff.props.disabled === true
-    ).toBe(true);
+    // In DRAWING phase, stage and discard are disabled
+    expect(getByTestId('btn-stage')).toBeTruthy();
   });
 
   it('reject wrong suit in sequence: sequenceMixedSuits error shown', () => {

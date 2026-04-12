@@ -1,5 +1,6 @@
 import { ActionResult, Card, Combination, GameState, Suit, TurnPhase } from '../types';
 import { validateCombination } from '../validation';
+import { sortCombinationCards } from '../sort';
 
 const ALL_SUITS: Suit[] = [Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS];
 
@@ -69,9 +70,10 @@ export function claimJoker(
 
     // Build updated combination: remove Joker, add all required natural cards
     const comboWithoutJoker = combo.cards.filter(c => !c.isJoker) as Card[];
-    const updatedCards = [...comboWithoutJoker, ...required];
-    const vr = validateCombination(updatedCards, { isInitialMeld: false });
+    const updatedCardsRaw = [...comboWithoutJoker, ...required];
+    const vr = validateCombination(updatedCardsRaw, { isInitialMeld: false });
     if (!vr.valid) return { success: false, error: 'JOKER_CLAIM_WRONG_CARD' };
+    const updatedCards = sortCombinationCards(updatedCardsRaw, 'set');
 
     const jokerCard: Card = { rank: null, suit: null, isJoker: true };
     let updatedHand = [...hand];
@@ -104,9 +106,10 @@ export function claimJoker(
     return { success: false, error: 'CARD_NOT_IN_HAND' };
   }
 
-  const swappedCards = combo.cards.map((c, i) => (i === jokerIndex ? realCard : c)) as Card[];
-  const vr = validateCombination(swappedCards, { isInitialMeld: false });
+  const swappedCardsRaw = combo.cards.map((c, i) => (i === jokerIndex ? realCard : c)) as Card[];
+  const vr = validateCombination(swappedCardsRaw, { isInitialMeld: false });
   if (!vr.valid) return { success: false, error: 'JOKER_CLAIM_WRONG_CARD' };
+  const swappedCards = sortCombinationCards(swappedCardsRaw, 'sequence');
 
   const jokerCard: Card = { rank: null, suit: null, isJoker: true };
   const updatedHand = [...removeCard(hand, realCard), jokerCard];

@@ -1,5 +1,5 @@
 import { ActionResult, Card, Combination, GameState, TurnPhase } from '../types';
-import { validateCombination, calculateMeldPoints } from '../validation';
+import { validateCombination } from '../validation';
 import { sortCombinationCards } from '../sort';
 
 function uuid(): string {
@@ -21,41 +21,38 @@ function removeCard(cards: readonly Card[], card: Card): Card[] {
   return result;
 }
 
-export function placeInitialMeld(
+function isSetCombination(cards: Card[]): boolean {
+  const nonJokers = cards.filter(c => !c.isJoker);
+  return nonJokers.length > 0 && nonJokers.every(c => c.rank === nonJokers[0].rank);
+}
+
+/**
+ * Place one or more new combinations on the table after the initial meld.
+ * No point minimum — any valid combination is accepted.
+ */
+export function placeCombinations(
   state: GameState,
   params: { playerId: string; combinations: Card[][] }
 ): ActionResult {
-  if (state.turnState.activePlayerId !== params.playerId) {
+  const { playerId, combinations } = params;
+
+  if (state.turnState.activePlayerId !== playerId) {
     return { success: false, error: 'NOT_YOUR_TURN' };
   }
   if (state.turnState.phase !== TurnPhase.ACTING) {
     return { success: false, error: 'WRONG_TURN_PHASE' };
   }
-  if (state.meldedPlayerIds.includes(params.playerId)) {
-    return { success: false, error: 'WRONG_TURN_PHASE' };
+  if (!state.meldedPlayerIds.includes(playerId)) {
+    return { success: false, error: 'PLAYER_NOT_YET_MELDED' };
   }
 
-  const { playerId, combinations } = params;
-
-  // If player drew from discard pile before melding, that card must appear in the meld
-  const { discardDrawnBeforeMeld } = state.turnState;
-  if (discardDrawnBeforeMeld !== null) {
-    const allMeldCards = combinations.flat();
-    const included = allMeldCards.some(c =>
-      !c.isJoker &&
-      c.rank === discardDrawnBeforeMeld.rank &&
-      c.suit === discardDrawnBeforeMeld.suit
-    );
-    if (!included) return { success: false, error: 'DRAWN_DISCARD_NOT_IN_MELD' };
-  }
-
-  // Validate each combination
+  // Validate each combination (not initial meld — no Joker limit)
   for (const combo of combinations) {
-    const vr = validateCombination(combo, { isInitialMeld: true });
+    const vr = validateCombination(combo, { isInitialMeld: false });
     if (!vr.valid) return { success: false, error: vr.error };
   }
 
-  // Verify all cards are in hand
+  // Verify all cards are in hand (simulate removal per combination)
   let hand = state.hands.find(h => h.playerId === playerId)!.cards;
   for (const combo of combinations) {
     for (const card of combo) {
@@ -63,10 +60,6 @@ export function placeInitialMeld(
       hand = removeCard(hand, card);
     }
   }
-
-  // Verify 51-point threshold
-  const points = calculateMeldPoints(combinations);
-  if (points < 51) return { success: false, error: 'MELD_BELOW_51_POINTS' };
 
   // Build new combinations and remove cards from hand
   let updatedHand = state.hands.find(h => h.playerId === playerId)!.cards as Card[];
@@ -91,12 +84,6 @@ export function placeInitialMeld(
       ...state,
       hands,
       tableState: { combinations: [...state.tableState.combinations, ...newCombinations] },
-      meldedPlayerIds: [...state.meldedPlayerIds, playerId],
     },
   };
-}
-
-function isSetCombination(cards: Card[]): boolean {
-  const nonJokers = cards.filter(c => !c.isJoker);
-  return nonJokers.length > 0 && nonJokers.every(c => c.rank === nonJokers[0].rank);
 }

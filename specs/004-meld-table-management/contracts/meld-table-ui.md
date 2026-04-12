@@ -34,7 +34,17 @@ claimJokerFromCombination(combinationId: string, realCards: Card[]): GameActionR
 ```
 
 - Calls `claimJoker(state, { playerId, combinationId, realCards })`.
-- Additional error code mapped: `JOKER_CLAIM_AMBIGUOUS_SET` → `game.errors.jokerClaimAmbiguousSet`.
+- Additional error codes mapped: `JOKER_CLAIM_AMBIGUOUS_SET` → `game.errors.jokerClaimAmbiguousSet`, `DRAWN_DISCARD_NOT_IN_MELD` → `game.errors.drawnDiscardNotInMeld`.
+
+### Updated `placeMeld` routing
+
+```ts
+// Routes based on player meld status:
+const action = hasMelded ? placeCombinations : placeInitialMeld;
+```
+
+- For non-melded players: calls `placeInitialMeld(state, { playerId, combinations })` — 51-point threshold enforced; `discardDrawnBeforeMeld` validated.
+- For already-melded players: calls `placeCombinations(state, { playerId, combinations })` — no point threshold; combinations added to table directly.
 
 ---
 
@@ -156,8 +166,11 @@ interface ActionBarProps {
 |---|---|---|---|
 | DRAWING | any | any | All action buttons disabled |
 | ACTING | false | false | "Stage" (enabled if hasSelectedCards), no Meld button yet |
-| ACTING | false | true | "Stage" (enabled if hasSelectedCards), "Meld" (enabled if meldReady), "Cancel" |
-| ACTING | true | — | "Lay Off" (enabled if hasSelectedCards), "Discard", "Claim Joker" (if canClaimJoker) |
+| ACTING | false | true | "Stage" (enabled if hasSelectedCards), "Meld" (enabled if meldReady, threshold ≥51 pts), "Cancel" |
+| ACTING | true | false | "Stage" (enabled if hasSelectedCards), "Lay Off" (enabled if hasSelectedCards), "Discard", "Claim Joker" (if canClaimJoker) |
+| ACTING | true | true | "Stage" (enabled if hasSelectedCards), "Meld" (enabled if meldReady, threshold: any staged combo), "Cancel", "Lay Off", "Discard", "Claim Joker" (if canClaimJoker) |
+
+Note: `meldReady` differs by meld status — `hasMelded ? stagedCombinations.length > 0 : stagedPointTotal >= 51`.
 
 **Label mapping**:
 - "Stage" → `t('game.actions.stageCombination')`

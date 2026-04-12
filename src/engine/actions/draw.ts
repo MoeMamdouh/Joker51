@@ -14,6 +14,8 @@ export function draw(
 
   const { source, playerId } = params;
 
+  const hasMelded = state.meldedPlayerIds.includes(params.playerId);
+
   if (source === 'draw_pile') {
     const currentState = state.drawPile.cards.length === 0
       ? handleDrawPileExhaustion(state)
@@ -48,7 +50,12 @@ export function draw(
         ...state,
         hands,
         discardPile: { cards: discardCards },
-        turnState: { ...state.turnState, phase: TurnPhase.ACTING },
+        turnState: {
+          ...state.turnState,
+          phase: TurnPhase.ACTING,
+          // Track the drawn card if player hasn't melded yet — must appear in their initial meld
+          discardDrawnBeforeMeld: hasMelded ? null : drawnCard,
+        },
       },
     };
   }

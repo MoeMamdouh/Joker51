@@ -81,7 +81,8 @@
       "discardRequiredToWin": "يجب أن ترمي ورقة للفوز",
       "cardNotInHand": "هذه الورقة ليست في يدك",
       "combinationNotOnTable": "هذه المجموعة ليست على الطاولة",
-      "jokerClaimAmbiguousSet": "اختر ورقتَي الرمز المفقودتين لاسترداد هذا الجوكر"
+      "jokerClaimAmbiguousSet": "اختر ورقتَي الرمز المفقودتين لاسترداد هذا الجوكر",
+      "drawnDiscardNotInMeld": "يجب أن تضم الورقة التي سحبتها من كومة الرمي في مجموعتك"
     }
   }
 }

@@ -111,9 +111,32 @@ description: "Task list for Meld & Table Management implementation"
 **Purpose**: Type safety verification, i18n audit, and platform smoke tests.
 
 - [X] T019 [P] Run `npx tsc --noEmit` from repo root — resolve all TypeScript errors from changed signatures: `realCard→realCards` in `claimJoker`, `placeMeld(Card[][])` in hook and screen, new `StagedMeldPreview` and updated `ActionBar` props, `getClaimableJokerCards` import in screen
-- [X] T020 [P] Audit i18n — verify `src/i18n/en.json` and `src/i18n/ar.json` have identical key sets after all additions; confirm all 4 new keys present in both files; add any missing keys
-- [ ] T021 Manual smoke test on iOS Simulator — PENDING (requires device) — run all 14 quickstart.md scenarios; verify ≤ 300 ms table re-render after each action; verify staged meld strip renders correctly; RTL layout correct for Arabic at 320pt and 430pt widths
-- [ ] T022 Manual smoke test on Android Emulator — PENDING (requires device) — repeat all 14 scenarios; verify `shadows.card.elevation` renders correctly; RTL layout; staged meld strip scrollable if many combinations
+- [X] T020 [P] Audit i18n — verify `src/i18n/en.json` and `src/i18n/ar.json` have identical key sets after all additions; confirm all 5 new keys present in both files; add any missing keys
+- [ ] T021 Manual smoke test on iOS Simulator — PENDING (requires device) — run all quickstart.md scenarios; verify ≤ 300 ms table re-render after each action; verify staged meld strip renders correctly; RTL layout correct for Arabic at 320pt and 430pt widths
+- [ ] T022 Manual smoke test on Android Emulator — PENDING (requires device) — repeat all scenarios; verify `shadows.card.elevation` renders correctly; RTL layout; staged meld strip scrollable if many combinations
+
+---
+
+## Phase 8: New Game Rules — Additional Melds & Discard Draw Restriction (Retrospective)
+
+**Purpose**: Documents two game rule changes implemented after the initial Phase 4 task plan was written. All tasks in this phase are complete.
+
+**Rule 1**: After their initial meld, a player may place additional new combinations on the table in any subsequent turn with no point threshold (`placeCombinations` engine action).
+
+**Rule 2**: A non-melded player who draws from the discard pile must use that drawn card in their initial meld on the same turn (`discardDrawnBeforeMeld` TurnState field + `DRAWN_DISCARD_NOT_IN_MELD` error).
+
+- [X] T023 [P] Add `'DRAWN_DISCARD_NOT_IN_MELD'` to `EngineErrorCode` union type in `src/engine/types.ts`
+- [X] T024 [P] Add `discardDrawnBeforeMeld: Card | null` field to `TurnState` interface in `src/engine/types.ts`
+- [X] T025 [P] Add `game.errors.drawnDiscardNotInMeld` key to `src/i18n/en.json` ("Drawn discard card must be used in this meld") and `src/i18n/ar.json` (matching Arabic translation); verify both files remain in sync
+- [X] T026 Update `src/engine/deal.ts` — initialize `discardDrawnBeforeMeld: null` in the `turnState` object created for each round
+- [X] T027 Update `src/engine/actions/draw.ts` — when a non-melded player draws from the discard pile, set `discardDrawnBeforeMeld` to the drawn card in the new `TurnState`; for draw pile draws or already-melded players, keep `discardDrawnBeforeMeld: null`
+- [X] T028 Update `src/engine/actions/meld.ts` (initial meld) — after validating point threshold, check `turnState.discardDrawnBeforeMeld`; if non-null, verify the drawn card appears in at least one of the submitted combinations; if not, return `{ success: false, error: 'DRAWN_DISCARD_NOT_IN_MELD' }` with no state change
+- [X] T029 Update `src/engine/actions/discard.ts` — when building `TurnState` for the next player, set `discardDrawnBeforeMeld: null`; also reset in `startNextRound` TurnState
+- [X] T030 Create `src/engine/actions/placeCombinations.ts` — new engine action for post-meld combination placement; requires `meldedPlayerIds.includes(playerId)`; validates each combination with `isInitialMeld: false`; no 51-point threshold; adds combinations to `tableState` without modifying `meldedPlayerIds`
+- [X] T031 Update `src/engine/index.ts` — export `placeCombinations` from `'./actions/placeCombinations'`
+- [X] T032 Update `src/hooks/useGameActions.ts` — in `placeMeld(combinations: Card[][])`, check `meldedPlayerIds.includes(playerId)` and route to `placeCombinations` for already-melded players and `placeInitialMeld` for non-melded; add `'DRAWN_DISCARD_NOT_IN_MELD': 'drawnDiscardNotInMeld'` to `ERROR_CODE_MAP`
+- [X] T033 Update `src/components/game/ActionBar.tsx` — show Stage button (`btn-stage`) for all players (both melded and non-melded) in ACTING phase; melded players can stage additional combinations; disabled only during DRAWING phase or when no cards selected
+- [X] T034 Update `src/screens/GameBoardScreen.tsx` — derive `meldReady` conditionally: `hasMelded ? stagedCombinations.length > 0 : stagedPointTotal >= 51`; pass `isInitialMeld: !hasMelded` to `validateCombination` in `handleStageCombination`
 
 ---
 
@@ -145,20 +168,25 @@ Phase 1 (Foundational)
 
 | File | Tasks |
 |---|---|
-| `src/engine/types.ts` | T001 |
-| `src/i18n/en.json` | T002 |
-| `src/i18n/ar.json` | T003 |
+| `src/engine/types.ts` | T001, T023, T024 |
+| `src/i18n/en.json` | T002, T025 |
+| `src/i18n/ar.json` | T003, T025 |
 | `src/engine/__tests__/validation.test.ts` | T004 |
-| `src/engine/validation.ts` + `src/engine/index.ts` | T005 |
+| `src/engine/validation.ts` + `src/engine/index.ts` | T005, T031 |
 | `src/engine/__tests__/actions/claimJoker.test.ts` | T006 |
 | `src/engine/actions/claimJoker.ts` | T007 |
-| `src/hooks/useGameActions.ts` | T008 |
+| `src/hooks/useGameActions.ts` | T008, T032 |
 | `src/components/game/StagedMeldPreview.tsx` (NEW) | T009 |
-| `src/components/game/ActionBar.tsx` | T010 |
-| `src/screens/GameBoardScreen.tsx` | T011, T015, T016 (sequential) |
+| `src/components/game/ActionBar.tsx` | T010, T033 |
+| `src/screens/GameBoardScreen.tsx` | T011, T015, T016, T034 (sequential) |
 | `src/components/game/__tests__/StagedMeldPreview.test.tsx` (NEW) | T012 |
 | `src/components/game/__tests__/ActionBar.test.tsx` | T013 |
 | `src/screens/__tests__/GameBoardScreen.test.tsx` | T014, T017, T018 (sequential) |
+| `src/engine/deal.ts` | T026 |
+| `src/engine/actions/draw.ts` | T027 |
+| `src/engine/actions/meld.ts` | T028 |
+| `src/engine/actions/discard.ts` | T029 |
+| `src/engine/actions/placeCombinations.ts` (NEW) | T030 |
 
 ---
 

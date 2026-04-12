@@ -7,6 +7,7 @@ Auto-generated from all feature plans. Last updated: 2026-04-12
 - AsyncStorage — `@joker51/language` (locale), `@joker51/savedSession` (in-progress game) (002-game-setup-screen)
 - TypeScript 5.x strict mode (already in project) + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18next, React Native Reanimated 3+, @react-native-async-storage/async-storage (003-game-board-screen)
 - AsyncStorage — key `@joker51/savedSession` (established in Phase 2) (003-game-board-screen)
+- TypeScript 5.x strict mode + React Native + Expo SDK ~54; Zustand (state); @react-native-async-storage/async-storage (persistence) (005-sort-meld-fix-layoff)
 
 - TypeScript 5.9 (strict mode, already in project) + None (engine is pure TS). Dev: Jest + ts-jest (to be added) (main)
 
@@ -26,9 +27,9 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, already in project): Follow standard conventions
 
 ## Recent Changes
+- 005-sort-meld-fix-layoff: Added TypeScript 5.x strict mode + React Native + Expo SDK ~54; Zustand (state); @react-native-async-storage/async-storage (persistence)
 - 004-meld-table-management: Added TypeScript 5.x strict mode (already in project) + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18next, React Native Reanimated 3+, @react-native-async-storage/async-storage
 - 004-meld-table-management: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 003-game-board-screen: Added TypeScript 5.x strict mode (already in project) + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18next, React Native Reanimated 3+, @react-native-async-storage/async-storage
 
 
 <!-- MANUAL ADDITIONS START -->

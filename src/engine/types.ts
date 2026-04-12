@@ -55,7 +55,8 @@ export type EngineErrorCode =
   | 'DISCARD_REQUIRED_TO_WIN'
   | 'CARD_NOT_IN_HAND'
   | 'COMBINATION_NOT_ON_TABLE'
-  | 'JOKER_CLAIM_AMBIGUOUS_SET';
+  | 'JOKER_CLAIM_AMBIGUOUS_SET'
+  | 'DRAWN_DISCARD_NOT_IN_MELD';
 
 // ─── Point Values ─────────────────────────────────────────────────────────────
 
@@ -128,6 +129,8 @@ export interface TableState {
 export interface TurnState {
   readonly activePlayerId: string;
   readonly phase: TurnPhase;
+  /** Card drawn from discard pile before initial meld. Must appear in the initial meld. Null otherwise. */
+  readonly discardDrawnBeforeMeld: Card | null;
 }
 
 export interface RoundResult {

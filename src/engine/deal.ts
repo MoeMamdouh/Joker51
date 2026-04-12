@@ -32,7 +32,7 @@ export function initGame(config: GameConfig): GameState {
     drawPile,
     discardPile,
     tableState: { combinations: [] },
-    turnState: { activePlayerId, phase: TurnPhase.DRAWING },
+    turnState: { activePlayerId, phase: TurnPhase.DRAWING, discardDrawnBeforeMeld: null },
     meldedPlayerIds: [],
     roundResults: [],
     deckCount,

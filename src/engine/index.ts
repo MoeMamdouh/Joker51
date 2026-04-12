@@ -1,9 +1,11 @@
 export * from './types';
+export { sortCombinationCards } from './sort';
 export { initGame } from './deal';
 export { validateCombination, calculateMeldPoints, isFullSet, isFullSequence, getClaimableJokerCards } from './validation';
 export { deckCountForPlayers } from './deck';
 export { draw } from './actions/draw';
 export { placeInitialMeld } from './actions/meld';
+export { placeCombinations } from './actions/placeCombinations';
 export { layOff } from './actions/layOff';
 export { claimJoker } from './actions/claimJoker';
 export { discard, startNextRound } from './actions/discard';

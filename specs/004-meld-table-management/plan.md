@@ -5,7 +5,7 @@
 
 ## Summary
 
-Phase 4 corrects and extends Phase 3's partially-implemented meld and table mechanics: (1) fixes `claimJoker` to require all missing suit cards for 2-natural-card sets; (2) adds a staged meld builder UI supporting multi-combination initial melds; (3) fixes the `canClaimJokerForCombination` check to inspect the player's actual hand; and (4) sorts table combinations by player turn order. All changes flow through the existing architecture — engine → hook → screen — with one new component (`StagedMeldPreview`) and targeted modifications to `ActionBar`, `GameBoardScreen`, `useGameActions`, and `claimJoker`.
+Phase 4 corrects and extends Phase 3's partially-implemented meld and table mechanics: (1) fixes `claimJoker` to require all missing suit cards for 2-natural-card sets; (2) adds a staged meld builder UI supporting multi-combination initial melds; (3) fixes the `canClaimJokerForCombination` check to inspect the player's actual hand; (4) sorts table combinations by player turn order; (5) adds a `placeCombinations` engine action enabling already-melded players to place additional new combinations with no 51-point threshold; and (6) tracks `discardDrawnBeforeMeld` in `TurnState` to enforce the rule that a non-melded player who draws from the discard pile must use that card in their initial meld. All changes flow through the existing architecture — engine → hook → screen — with one new component (`StagedMeldPreview`), one new engine action (`placeCombinations`), and targeted modifications to `ActionBar`, `GameBoardScreen`, `useGameActions`, `draw`, `meld`, and `discard`.
 
 ## Technical Context
 
@@ -23,14 +23,14 @@ Phase 4 corrects and extends Phase 3's partially-implemented meld and table mech
 
 | Principle | Status | Notes |
 |---|---|---|
-| I. Game Rule Fidelity | ✅ PASS | `claimJoker` corrected to match §8.2; multi-combo meld matches §7; no game logic in UI |
-| II. Layered Architecture | ✅ PASS | `getClaimableJokerCards` added to engine/validation; UI reads it via import, not inline logic |
-| III. Test-First Game Logic | ✅ PASS | New engine tests written before implementing `claimJoker` changes and `getClaimableJokerCards` |
+| I. Game Rule Fidelity | ✅ PASS | `claimJoker` corrected to match §8.2; multi-combo meld matches §7; `placeCombinations` matches §9 (no threshold for additional melds); discard draw restriction matches §11.1; no game logic in UI |
+| II. Layered Architecture | ✅ PASS | `getClaimableJokerCards` and `placeCombinations` added to engine; `discardDrawnBeforeMeld` tracked in engine TurnState; UI reads via imports, not inline logic |
+| III. Test-First Game Logic | ✅ PASS | New engine tests written before implementing `claimJoker` changes, `getClaimableJokerCards`, and `placeCombinations` |
 | IV. Cross-Platform Excellence | ✅ PASS | `StagedMeldPreview` uses tokens + Reanimated; manual platform check required |
-| V. State Predictability | ✅ PASS | `stagedCombinations` is ephemeral local state (not persisted); only confirmed melds go to engine + AsyncStorage |
-| VI. Multilingual Support | ✅ PASS | 4 new i18n keys added to both `en.json` and `ar.json` in the same commit |
+| V. State Predictability | ✅ PASS | `stagedCombinations` is ephemeral local state (not persisted); `discardDrawnBeforeMeld` in TurnState is engine-managed and reset on each turn end; only confirmed melds go to engine + AsyncStorage |
+| VI. Multilingual Support | ✅ PASS | 5 new i18n keys added to both `en.json` and `ar.json` in the same commit (4 original + `drawnDiscardNotInMeld`) |
 | VII. Design System | ✅ PASS | `StagedMeldPreview` uses tokens exclusively; `ActionBar` additions use existing token values |
-| VIII. Simplicity | ✅ PASS | Staged meld uses existing `Card[][]` engine API; no new dependencies; `getClaimableJokerCards` is one pure function |
+| VIII. Simplicity | ✅ PASS | `placeCombinations` reuses existing `Card[][]` engine API with minimal new logic; `discardDrawnBeforeMeld` is a single nullable field on an existing type |
 
 ## Project Structure
 
@@ -52,21 +52,26 @@ specs/004-meld-table-management/
 ```text
 src/
 ├── engine/
-│   ├── types.ts                              MODIFY — add JOKER_CLAIM_AMBIGUOUS_SET error code
+│   ├── types.ts                              MODIFY — add JOKER_CLAIM_AMBIGUOUS_SET, DRAWN_DISCARD_NOT_IN_MELD error codes; add discardDrawnBeforeMeld: Card | null to TurnState
 │   ├── validation.ts                         MODIFY — add getClaimableJokerCards()
+│   ├── deal.ts                               MODIFY — initialize discardDrawnBeforeMeld: null in TurnState
 │   └── actions/
-│       └── claimJoker.ts                     MODIFY — realCard → realCards: Card[]
+│       ├── claimJoker.ts                     MODIFY — realCard → realCards: Card[]
+│       ├── draw.ts                           MODIFY — set discardDrawnBeforeMeld when non-melded player draws from discard
+│       ├── meld.ts                           MODIFY — validate discardDrawnBeforeMeld card appears in meld combinations
+│       ├── discard.ts                        MODIFY — reset discardDrawnBeforeMeld: null for next player's TurnState
+│       └── placeCombinations.ts             NEW — post-meld combinations, no 51-point threshold
 ├── hooks/
-│   └── useGameActions.ts                     MODIFY — placeMeld(Card[][]), claimJokerFromCombination(Card[])
+│   └── useGameActions.ts                     MODIFY — placeMeld routes to placeCombinations for melded players; claimJokerFromCombination(Card[]); DRAWN_DISCARD_NOT_IN_MELD in ERROR_CODE_MAP
 ├── screens/
-│   └── GameBoardScreen.tsx                   MODIFY — staged meld builder, fixed claim check, turn-order sort
+│   └── GameBoardScreen.tsx                   MODIFY — staged meld builder, fixed claim check, turn-order sort, meldReady threshold differs by meld status
 ├── components/
 │   └── game/
 │       ├── StagedMeldPreview.tsx             NEW
-│       └── ActionBar.tsx                     MODIFY — Stage/Meld/Cancel buttons for meld builder
+│       └── ActionBar.tsx                     MODIFY — Stage button shown for melded players (additional combinations); Meld/Cancel buttons for staging flow
 └── i18n/
-    ├── en.json                               MODIFY — 4 new keys
-    └── ar.json                               MODIFY — same 4 keys in Arabic
+    ├── en.json                               MODIFY — 5 new keys (4 original + drawnDiscardNotInMeld)
+    └── ar.json                               MODIFY — same 5 keys in Arabic
 ```
 
 ## Complexity Tracking

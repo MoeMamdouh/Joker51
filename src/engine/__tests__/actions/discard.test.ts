@@ -16,7 +16,7 @@ function actingState(playerId: string, hand: Card[]): GameState {
   const state = initGame({ players: players(2), totalRounds: 4, random: seededRng(30) });
   return {
     ...state,
-    turnState: { activePlayerId: playerId, phase: TurnPhase.ACTING },
+    turnState: { activePlayerId: playerId, phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
     meldedPlayerIds: [playerId],
     hands: state.hands.map(h => h.playerId === playerId ? { ...h, cards: hand } : h),
   };
