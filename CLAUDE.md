@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-04-12
 
 ## Active Technologies
+- TypeScript 5.x (strict mode) — React Native + Expo SDK ~54 + Expo Router (navigation), Zustand (state), i18next + react-i18next (i18n), expo-localization (locale detection), @react-native-async-storage/async-storage (persistence), React Native Reanimated 3+ (animations) (002-game-setup-screen)
+- AsyncStorage — `@joker51/language` (locale), `@joker51/savedSession` (in-progress game) (002-game-setup-screen)
 
 - TypeScript 5.9 (strict mode, already in project) + None (engine is pure TS). Dev: Jest + ts-jest (to be added) (main)
 
@@ -22,6 +24,7 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, already in project): Follow standard conventions
 
 ## Recent Changes
+- 002-game-setup-screen: Added TypeScript 5.x (strict mode) — React Native + Expo SDK ~54 + Expo Router (navigation), Zustand (state), i18next + react-i18next (i18n), expo-localization (locale detection), @react-native-async-storage/async-storage (persistence), React Native Reanimated 3+ (animations)
 
 - main: Added TypeScript 5.9 (strict mode, already in project) + None (engine is pure TS). Dev: Jest + ts-jest (to be added)
 
