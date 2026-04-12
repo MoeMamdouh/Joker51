@@ -19,7 +19,7 @@ function stateWithJokerOnTable(): { state: GameState; combinationId: string } {
   };
   const handWithRealCard: GameState = {
     ...state,
-    turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+    turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
     meldedPlayerIds: ['p1'],
     tableState,
     hands: state.hands.map(h =>
@@ -81,7 +81,7 @@ describe('claimJoker', () => {
     };
     const forcedState: GameState = {
       ...state,
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       tableState,
       hands: state.hands.map(h =>
@@ -118,7 +118,7 @@ describe('claimJoker — multi-card (Phase 4 rules)', () => {
     };
     const gameState: GameState = {
       ...state,
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       tableState,
       hands: state.hands.map(h =>
@@ -149,7 +149,7 @@ describe('claimJoker — multi-card (Phase 4 rules)', () => {
     };
     const gameState: GameState = {
       ...state,
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       tableState,
       hands: state.hands.map(h =>
@@ -183,7 +183,7 @@ describe('claimJoker — multi-card (Phase 4 rules)', () => {
     };
     const gameState: GameState = {
       ...state,
-      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING },
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
       meldedPlayerIds: ['p1'],
       tableState,
       hands: state.hands.map(h =>

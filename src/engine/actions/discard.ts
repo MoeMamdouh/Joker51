@@ -69,7 +69,7 @@ export function discard(
       ...state,
       hands,
       discardPile,
-      turnState: { activePlayerId: nextId, phase: TurnPhase.DRAWING },
+      turnState: { activePlayerId: nextId, phase: TurnPhase.DRAWING, discardDrawnBeforeMeld: null },
     },
   };
 }
@@ -105,6 +105,7 @@ export function startNextRound(state: GameState): GameState {
     turnState: {
       activePlayerId: state.config.players[startIndex].id,
       phase: TurnPhase.DRAWING,
+      discardDrawnBeforeMeld: null,
     },
   };
 }

@@ -4,6 +4,7 @@ export { validateCombination, calculateMeldPoints, isFullSet, isFullSequence, ge
 export { deckCountForPlayers } from './deck';
 export { draw } from './actions/draw';
 export { placeInitialMeld } from './actions/meld';
+export { placeCombinations } from './actions/placeCombinations';
 export { layOff } from './actions/layOff';
 export { claimJoker } from './actions/claimJoker';
 export { discard, startNextRound } from './actions/discard';

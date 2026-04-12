@@ -39,15 +39,13 @@ export function ActionBar({
 
   return (
     <View style={styles.container}>
-      {!hasMelded && (
-        <ActionButton
-          label={t('game.actions.stageCombination')}
-          onPress={onStage}
-          disabled={isDrawing || !hasSelectedCards}
-          testID="btn-stage"
-        />
-      )}
-      {!hasMelded && isStagingMeld && (
+      <ActionButton
+        label={t('game.actions.stageCombination')}
+        onPress={onStage}
+        disabled={isDrawing || !hasSelectedCards}
+        testID="btn-stage"
+      />
+      {isStagingMeld && (
         <>
           <ActionButton
             label={t('game.actions.confirmMeld')}

@@ -93,6 +93,14 @@ The Ace has a **dual position** in sequences:
 ### Example of valid opening:
 `6♠ 7♠ 8♠` (21 pts) + `10♦ 10♣ 10♥` (30 pts) = **51 pts** ✅
 
+### Discard Pile Draw Before Initial Meld
+
+A player who has **not yet melded** may only draw from the discard pile under one condition:
+
+- They must **use that card in their initial meld on the same turn**
+
+If the player cannot or does not include the drawn discard card in their initial meld, the draw is invalid. Players who have not yet melded and cannot immediately use the discard card in their opening meld must draw from the draw pile instead.
+
 ---
 
 ## 8. Joker Rules
@@ -123,13 +131,15 @@ Each turn follows this order:
 
 ```
 1. DRAW        → Take 1 card from draw pile OR top card from discard pile
+                  (See Section 7 for discard pile restriction before initial meld)
 2. MELD        → (Optional) Place initial meld if 51pt requirement is met (first time only)
-3. ADD         → (Optional) Add cards to any existing table combinations
-                  (Also allowed during the same turn as initial meld)
+                  OR place new combinations on the table (any turn after initial meld, no point threshold)
+3. ADD         → (Optional) Lay off cards onto any existing table combinations
+                  (Only available after initial meld; also allowed during the same turn as initial meld)
 4. DISCARD     → Must discard exactly 1 card to end the turn
 ```
 
-> **Important:** Steps 2 and 3 can happen in the same turn. A player can meld AND add to table combinations in one turn.
+> **Important:** Steps 2 and 3 can happen in any combination in the same turn. A player can meld initial + add new combinations + lay off all in one turn.
 
 ---
 
@@ -137,12 +147,16 @@ Each turn follows this order:
 
 Once a player has completed their initial meld, on any subsequent turn they may:
 
-- **Extend a sequence** by adding cards to either end
+- **Place new combinations** on the table (sequences or sets) — no minimum point requirement
+  - Example: Place `J♠ Q♠ K♠` as a new sequence at any time after initial meld
+- **Extend a sequence** by adding cards to either end (lay off)
   - Example: Add `4♣` or `8♣` to `5♣ 6♣ 7♣`
-- **Complete a set** by adding a missing suit
+- **Complete a set** by adding a missing suit (lay off)
   - Example: Add `9♣` to `9♠ 9♥ 9♦`
 - **Add to any player's** melded combinations (not just their own)
 - **Claim Jokers** from any table combination (see Section 8)
+
+> Placing new combinations and laying off onto existing combinations can both happen in the same turn, in any order.
 
 ---
 
@@ -152,6 +166,7 @@ Once a player has completed their initial meld, on any subsequent turn they may:
 - Player draws **1 card only** per turn, from either:
   - The **top of the draw pile** (face-down)
   - The **top card of the discard pile** (face-up, visible to all)
+- A player who has **not yet completed their initial meld** may only draw from the discard pile if they will use that card in their initial meld on the same turn (see Section 7)
 
 ### 11.2 Draw Pile Exhaustion
 - When the draw pile is **empty**, the discard pile is **reshuffled** and becomes the new draw pile
@@ -236,7 +251,8 @@ A player **wins the round** when:
 | Full sequence cleared | A→K same suit (13 cards) → cleared on next reshuffle |
 | Winning discard | Must always discard last card to win; cannot meld out entirely |
 | No meld penalty | Always flat 100, regardless of cards in hand |
-| Discard pile draw | Top card only (1 card per turn) |
+| Discard pile draw | Top card only (1 card per turn); before initial meld, must use drawn card in that same turn's meld |
+| Additional melds | After initial meld, player may place new valid combinations any turn with no point minimum |
 | Multiple decks | Players are notified when 2+ decks are used |
 
 ---

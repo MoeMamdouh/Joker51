@@ -37,14 +37,53 @@ interface Card {
 
 ---
 
+## Existing Types (changed)
+
+### `TurnState` — new field (in `types.ts`)
+
+```ts
+interface TurnState {
+  readonly activePlayerId: string;
+  readonly phase: TurnPhase;
+  readonly discardDrawnBeforeMeld: Card | null;  // NEW — the discard-pile card drawn by a non-melded player this turn
+}
+```
+
+**Lifecycle:**
+- Initialized to `null` in `deal.ts` at the start of each turn/round.
+- Set to the drawn card in `draw.ts` when a non-melded player draws from the discard pile.
+- Kept `null` when drawing from the draw pile, or when the active player is already melded.
+- Validated in `meld.ts` (`placeInitialMeld`) — if non-null, the card must appear in at least one submitted combination.
+- Reset to `null` in `discard.ts` when building the next player's `TurnState`.
+
+---
+
 ## Engine Changes
 
-### `EngineErrorCode` — new variant (in `types.ts`)
+### `EngineErrorCode` — new variants (in `types.ts`)
 
 ```ts
 // ADD to EngineErrorCode union:
-| 'JOKER_CLAIM_AMBIGUOUS_SET'  // Player provided 1 card for a 2-natural-card set (2 required)
+| 'JOKER_CLAIM_AMBIGUOUS_SET'   // Player provided 1 card for a 2-natural-card set (2 required)
+| 'DRAWN_DISCARD_NOT_IN_MELD'   // Non-melded player drew from discard but did not include that card in the meld
 ```
+
+### New engine action: `placeCombinations` (in `actions/placeCombinations.ts`)
+
+```ts
+export function placeCombinations(
+  state: GameState,
+  params: { playerId: string; combinations: Card[][] }
+): ActionResult
+```
+
+**Rules:**
+- `meldedPlayerIds` must include `params.playerId` — returns `PLAYER_NOT_YET_MELDED` if not.
+- Each combination validated with `validateCombination(combo, { isInitialMeld: false })`.
+- No 51-point threshold.
+- Adds all combinations to `tableState.combinations` (new UUIDs generated per combination).
+- Does NOT modify `meldedPlayerIds` (player is already melded).
+- Cards removed from the player's hand.
 
 ### `claimJoker` params change (in `actions/claimJoker.ts`)
 
@@ -106,9 +145,11 @@ export function getClaimableJokerCards(
 // NEW local state
 const [stagedCombinations, setStagedCombinations] = useState<Card[][]>([]);
 
-// Derived
+// Derived — threshold differs by meld status
 const stagedPointTotal: number = calculateMeldPoints(stagedCombinations);  // from engine/validation
-const meldReady: boolean = stagedPointTotal >= 51 && stagedCombinations.length > 0;
+const meldReady: boolean = hasMelded
+  ? stagedCombinations.length > 0          // already melded: any staged combo is enough
+  : stagedPointTotal >= 51;                // initial meld: 51-point minimum
 ```
 
 **Lifecycle:**
@@ -131,12 +172,23 @@ const orderedCombinations = [...tableState.combinations].sort((a, b) => {
 
 ## i18n Additions
 
-Both `src/i18n/en.json` and `src/i18n/ar.json` under `game.errors`:
+`src/i18n/en.json` and `src/i18n/ar.json` under `game.errors`:
 
 | Key | EN value | AR value |
 |---|---|---|
 | `jokerClaimAmbiguousSet` | "Select both missing suit cards to claim this Joker" | (Arabic translation) |
+| `drawnDiscardNotInMeld` | "Drawn discard card must be used in this meld" | (Arabic translation) |
+
+Under `game.actions`:
+
+| Key | EN value | AR value |
+|---|---|---|
 | `stageCombination` | "Stage" | (Arabic translation) |
 | `confirmMeld` | "Confirm Meld" | (Arabic translation) |
 | `cancelMeld` | "Cancel Meld" | (Arabic translation) |
+
+Under `game` (top level):
+
+| Key | EN value | AR value |
+|---|---|---|
 | `stagedPoints` | "{{points}} pts staged" | (Arabic translation) |

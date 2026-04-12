@@ -83,7 +83,10 @@ export function GameBoardScreen() {
 
   // Staged meld derived values
   const stagedPointTotal = calculateMeldPoints(stagedCombinations);
-  const meldReady = stagedPointTotal >= 51;
+  // Initial meld: needs 51pts. Additional melds (already melded): any valid combo is ready.
+  const meldReady = hasMelded
+    ? stagedCombinations.length > 0
+    : stagedPointTotal >= 51;
   const isStagingMeld = stagedCombinations.length > 0;
 
   // Turn-order sorted combinations (US3)
@@ -144,7 +147,7 @@ export function GameBoardScreen() {
 
   function handleStageCombination() {
     if (selectedCards.length === 0) return;
-    const vr = validateCombination(selectedCards, { isInitialMeld: true });
+    const vr = validateCombination(selectedCards, { isInitialMeld: !hasMelded });
     if (!vr.valid) {
       showError(t(`game.errors.${vr.error ? (ERROR_UI_MAP[vr.error] ?? vr.error) : 'invalidCombination'}`));
       return;

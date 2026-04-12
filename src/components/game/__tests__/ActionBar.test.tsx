@@ -91,8 +91,8 @@ describe('ActionBar', () => {
     expect(queryByTestId('btn-cancel-meld')).toBeNull();
   });
 
-  it('shows LayOff + Discard + ClaimJoker when melded with canClaimJoker', () => {
-    const { getByTestId, queryByTestId } = render(
+  it('shows Stage + LayOff + Discard + ClaimJoker when melded with canClaimJoker', () => {
+    const { getByTestId } = render(
       <ActionBar
         {...defaultProps}
         phase={TurnPhase.ACTING}
@@ -101,11 +101,11 @@ describe('ActionBar', () => {
         canClaimJoker={true}
       />
     );
+    // Stage is now always visible (melded players can place new combinations)
+    expect(getByTestId('btn-stage')).toBeTruthy();
     expect(getByTestId('btn-lay-off')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
     expect(getByTestId('btn-claim-joker')).toBeTruthy();
-    // No Stage button after first meld
-    expect(queryByTestId('btn-stage')).toBeNull();
   });
 
   it('does not show LayOff when not yet melded', () => {
@@ -155,8 +155,8 @@ describe('ActionBar', () => {
     expect(isDisabled(getByTestId('btn-meld'))).toBe(false);
   });
 
-  it('ACTING + melded: Stage button not shown, unchanged lay-off/discard/claim behavior', () => {
-    const { queryByTestId, getByTestId } = render(
+  it('ACTING + melded: Stage button shown (additional melds allowed), lay-off/discard also shown', () => {
+    const { getByTestId } = render(
       <ActionBar
         {...defaultProps}
         phase={TurnPhase.ACTING}
@@ -167,7 +167,8 @@ describe('ActionBar', () => {
         meldReady={false}
       />
     );
-    expect(queryByTestId('btn-stage')).toBeNull();
+    // Stage is now shown for melded players too (additional combinations)
+    expect(getByTestId('btn-stage')).toBeTruthy();
     expect(getByTestId('btn-lay-off')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
   });

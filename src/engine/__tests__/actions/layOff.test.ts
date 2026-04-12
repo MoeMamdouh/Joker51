@@ -17,7 +17,7 @@ function stateWithMeldedPlayer(): { state: GameState; combinationId: string } {
   let state = initGame({ players: players(2), totalRounds: 4, random: seededRng(20) });
   state = {
     ...state,
-    turnState: { activePlayerId: 'p1', phase: 'acting' as any },
+    turnState: { activePlayerId: 'p1', phase: 'acting' as any, discardDrawnBeforeMeld: null },
     hands: state.hands.map(h =>
       h.playerId === 'p1' ? { ...h, cards: [...h.cards, ...seq, ...set] } : h
     ),
@@ -48,7 +48,7 @@ describe('layOff', () => {
 
   it('rejects PLAYER_NOT_YET_MELDED', () => {
     let state = initGame({ players: players(2), totalRounds: 4, random: seededRng(21) });
-    state = { ...state, turnState: { activePlayerId: 'p1', phase: 'acting' as any } };
+    state = { ...state, turnState: { activePlayerId: 'p1', phase: 'acting' as any, discardDrawnBeforeMeld: null } };
     const card = c(Rank.FOUR, Suit.CLUBS);
     const result = layOff(state, { playerId: 'p1', combinationId: 'any', card });
     expect(result.success).toBe(false);
