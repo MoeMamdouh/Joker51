@@ -26,5 +26,57 @@
   "validation": {
     "nameRequired": "الاسم مطلوب",
     "nameTooLong": "يجب ألا يتجاوز الاسم 20 حرفاً"
+  },
+  "game": {
+    "turnIndicator": "دور {{name}}",
+    "phase": {
+      "drawing": "اسحب ورقة",
+      "acting": "العب يدك"
+    },
+    "drawPile": "كومة السحب",
+    "discardPile": "كومة الرمي",
+    "actions": {
+      "meld": "ضع مجموعة",
+      "discard": "ارمِ",
+      "claimJoker": "استرد الجوكر",
+      "layOff": "أضف للمجموعة"
+    },
+    "handOff": {
+      "prompt": "مرر الجهاز إلى {{name}}",
+      "confirm": "أنا {{name}}، أرِني يدي"
+    },
+    "roundSummary": {
+      "title": "الجولة {{round}} انتهت",
+      "penalty": "العقوبة: {{points}} نقطة",
+      "nextRound": "الجولة التالية",
+      "gameOver": "انتهت اللعبة",
+      "playAgain": "العب مجدداً",
+      "winner": "فائز الجولة",
+      "coWinners": "فائزو الجولة"
+    },
+    "score": {
+      "label": "{{name}}: {{score}}"
+    },
+    "deckCount": "{{count}} ورقات",
+    "errors": {
+      "notYourTurn": "ليس دورك",
+      "wrongPhase": "لا يمكنك فعل ذلك الآن",
+      "invalidCombination": "مجموعة غير صالحة",
+      "combinationTooShort": "المجموعة قصيرة جداً",
+      "setTooLong": "لا يمكن للمجموعة أن تحتوي على أكثر من 4 أوراق",
+      "setDuplicateSuit": "لا يمكن تكرار نفس الرمز في المجموعة",
+      "sequenceMixedSuits": "يجب أن تكون الأوراق في التسلسل من نفس الرمز",
+      "sequenceNotConsecutive": "يجب أن تكون الأوراق متتالية في التسلسل",
+      "aceWraparound": "لا يمكن للآص أن يلتف حول نفسه",
+      "jokerLimitExceeded": "عدد الجوكرات في هذه المجموعة كثير جداً",
+      "meldBelow51": "يجب أن تكون قيمة المجموعة 51 نقطة على الأقل",
+      "notYetMelded": "يجب أن تضع مجموعتك الأولى أولاً",
+      "jokerClaimNotYourTurn": "يمكنك استرداد الجوكر في دورك فقط",
+      "jokerClaimWrongCard": "ليس لديك الورقة لاستبدال هذا الجوكر",
+      "jokerClaimBreaks": "استبدال هذا الجوكر سيكسر المجموعة",
+      "discardRequiredToWin": "يجب أن ترمي ورقة للفوز",
+      "cardNotInHand": "هذه الورقة ليست في يدك",
+      "combinationNotOnTable": "هذه المجموعة ليست على الطاولة"
+    }
   }
 }
