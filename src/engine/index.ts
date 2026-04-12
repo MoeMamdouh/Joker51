@@ -1,4 +1,5 @@
 export * from './types';
+export { sortCombinationCards } from './sort';
 export { initGame } from './deal';
 export { validateCombination, calculateMeldPoints, isFullSet, isFullSequence, getClaimableJokerCards } from './validation';
 export { deckCountForPlayers } from './deck';

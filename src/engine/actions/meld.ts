@@ -1,5 +1,6 @@
 import { ActionResult, Card, Combination, GameState, TurnPhase } from '../types';
 import { validateCombination, calculateMeldPoints } from '../validation';
+import { sortCombinationCards } from '../sort';
 
 function uuid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -71,10 +72,11 @@ export function placeInitialMeld(
   let updatedHand = state.hands.find(h => h.playerId === playerId)!.cards as Card[];
   const newCombinations: Combination[] = combinations.map(cards => {
     cards.forEach(card => { updatedHand = removeCard(updatedHand, card); });
+    const type = isSetCombination(cards) ? 'set' : 'sequence';
     return {
       id: uuid(),
-      cards,
-      type: isSetCombination(cards) ? 'set' : 'sequence',
+      cards: sortCombinationCards(cards, type),
+      type,
       ownerId: playerId,
     };
   });

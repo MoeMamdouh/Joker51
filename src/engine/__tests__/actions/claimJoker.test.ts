@@ -2,6 +2,7 @@ import { claimJoker } from '../../actions/claimJoker';
 import { initGame } from '../../deal';
 import { Card, GameState, Rank, Suit, TurnPhase } from '../../types';
 
+
 const c = (rank: Rank, suit: Suit): Card => ({ rank, suit, isJoker: false });
 const joker = (): Card => ({ rank: null, suit: null, isJoker: true });
 
@@ -168,6 +169,45 @@ describe('claimJoker — multi-card (Phase 4 rules)', () => {
     const hand = result.state!.hands.find(h => h.playerId === 'p1')!;
     expect(hand.cards.some(x => x.isJoker)).toBe(true);
     expect(hand.cards.filter(x => !x.isJoker)).toHaveLength(0);
+  });
+
+  it('sequence claim result is sorted: 5♣ [Joker] 7♣ claimed with 6♣ → stored as 5♣ 6♣ 7♣', () => {
+    const { state, combinationId } = stateWithJokerOnTable();
+    const result = claimJoker(state, { playerId: 'p1', combinationId, realCards: [c(Rank.SIX, Suit.CLUBS)] });
+    expect(result.success).toBe(true);
+    const combo = result.state!.tableState.combinations.find(x => x.id === combinationId)!;
+    expect(combo.cards.map((card: Card) => card.rank)).toEqual([Rank.FIVE, Rank.SIX, Rank.SEVEN]);
+  });
+
+  it('set claim result is sorted in SPADES→HEARTS→DIAMONDS→CLUBS order', () => {
+    const state = initGame({ players: [{ id: 'p1', name: 'P1' }, { id: 'p2', name: 'P2' }], totalRounds: 4 });
+    const combinationId = 'combo-set-sort';
+    // [9♣ 9♥ Joker] — claim with 9♠ and 9♦ → result sorted: 9♠ 9♥ 9♦ 9♣
+    const tableState = {
+      combinations: [{
+        id: combinationId,
+        cards: [c(Rank.NINE, Suit.CLUBS), c(Rank.NINE, Suit.HEARTS), joker()],
+        type: 'set' as const,
+        ownerId: 'p2',
+      }],
+    };
+    const gameState: GameState = {
+      ...state,
+      turnState: { activePlayerId: 'p1', phase: TurnPhase.ACTING, discardDrawnBeforeMeld: null },
+      meldedPlayerIds: ['p1'],
+      tableState,
+      hands: state.hands.map(h =>
+        h.playerId === 'p1' ? { ...h, cards: [c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.DIAMONDS)] } : h
+      ),
+    };
+    const result = claimJoker(gameState, {
+      playerId: 'p1',
+      combinationId,
+      realCards: [c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.DIAMONDS)],
+    });
+    expect(result.success).toBe(true);
+    const combo = result.state!.tableState.combinations.find(x => x.id === combinationId)!;
+    expect(combo.cards.map((card: Card) => card.suit)).toEqual([Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS]);
   });
 
   it('claim from 3-card set with only 1 of 2 missing suits → JOKER_CLAIM_AMBIGUOUS_SET', () => {

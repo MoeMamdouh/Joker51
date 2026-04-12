@@ -22,6 +22,8 @@ const config: Config = {
         '<rootDir>/src/components/**/__tests__/**/*.test.ts',
         '<rootDir>/src/screens/**/__tests__/**/*.test.tsx',
         '<rootDir>/src/screens/**/__tests__/**/*.test.ts',
+        '<rootDir>/src/hooks/**/__tests__/**/*.test.ts',
+        '<rootDir>/src/hooks/**/__tests__/**/*.test.tsx',
       ],
       moduleFileExtensions: ['tsx', 'ts', 'jsx', 'js'],
       moduleNameMapper: {

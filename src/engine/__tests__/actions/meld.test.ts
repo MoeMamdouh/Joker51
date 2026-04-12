@@ -84,3 +84,27 @@ describe('placeInitialMeld', () => {
     expect(result.error).toBe('JOKER_LIMIT_EXCEEDED');
   });
 });
+
+describe('placeInitialMeld — sorted output', () => {
+  it('sequence submitted out-of-order is stored sorted ascending', () => {
+    // Submit 8♠ 6♠ 7♠ — should be stored as 6♠ 7♠ 8♠
+    const seq = [c(Rank.EIGHT, Suit.SPADES), c(Rank.SIX, Suit.SPADES), c(Rank.SEVEN, Suit.SPADES)];
+    const set = [c(Rank.TEN, Suit.DIAMONDS), c(Rank.TEN, Suit.CLUBS), c(Rank.TEN, Suit.HEARTS)];
+    const state = stateInActingPhase('p1', [...seq, ...set]);
+    const result = placeInitialMeld(state, { playerId: 'p1', combinations: [seq, set] });
+    expect(result.success).toBe(true);
+    const seqCombo = result.state!.tableState.combinations[0];
+    expect(seqCombo.cards.map((card: Card) => card.rank)).toEqual([Rank.SIX, Rank.SEVEN, Rank.EIGHT]);
+  });
+
+  it('set submitted out-of-suit-order is stored in SPADES→HEARTS→DIAMONDS→CLUBS order', () => {
+    // Submit 10♦ 10♣ 10♥ — should be stored as 10♥ 10♦ 10♣ (HEARTS→DIAMONDS→CLUBS, no SPADES)
+    const seq = [c(Rank.SIX, Suit.SPADES), c(Rank.SEVEN, Suit.SPADES), c(Rank.EIGHT, Suit.SPADES)];
+    const set = [c(Rank.TEN, Suit.DIAMONDS), c(Rank.TEN, Suit.CLUBS), c(Rank.TEN, Suit.HEARTS)];
+    const state = stateInActingPhase('p1', [...seq, ...set]);
+    const result = placeInitialMeld(state, { playerId: 'p1', combinations: [seq, set] });
+    expect(result.success).toBe(true);
+    const setCombo = result.state!.tableState.combinations[1];
+    expect(setCombo.cards.map((card: Card) => card.suit)).toEqual([Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS]);
+  });
+});
