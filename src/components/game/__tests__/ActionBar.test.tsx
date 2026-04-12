@@ -7,7 +7,9 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const map: Record<string, string> = {
-        'game.actions.meld': 'Meld',
+        'game.actions.stageCombination': 'Stage',
+        'game.actions.confirmMeld': 'Confirm Meld',
+        'game.actions.cancelMeld': 'Cancel',
         'game.actions.discard': 'Discard',
         'game.actions.layOff': 'Lay Off',
         'game.actions.claimJoker': 'Claim Joker',
@@ -27,78 +29,146 @@ function isDisabled(element: ReturnType<ReturnType<typeof render>['getByTestId']
   );
 }
 
+const defaultProps = {
+  isStagingMeld: false,
+  meldReady: false,
+  onMeld: noop,
+  onStage: noop,
+  onCancelMeld: noop,
+  onDiscard: noop,
+  onLayOff: noop,
+  onClaimJoker: noop,
+};
+
 describe('ActionBar', () => {
-  it('shows Meld (disabled) and Discard (disabled) in DRAWING phase', () => {
+  it('shows Stage (disabled) and Discard (disabled) in DRAWING phase', () => {
     const { getByTestId } = render(
       <ActionBar
+        {...defaultProps}
         phase={TurnPhase.DRAWING}
         hasMelded={false}
         hasSelectedCards={false}
         canClaimJoker={false}
-        onMeld={noop} onDiscard={noop} onLayOff={noop} onClaimJoker={noop}
       />
     );
-    expect(isDisabled(getByTestId('btn-meld'))).toBe(true);
+    expect(isDisabled(getByTestId('btn-stage'))).toBe(true);
     expect(isDisabled(getByTestId('btn-discard'))).toBe(true);
   });
 
-  it('shows Meld disabled when ACTING but no cards selected', () => {
+  it('shows Stage disabled when ACTING but no cards selected', () => {
     const { getByTestId, queryByTestId } = render(
       <ActionBar
+        {...defaultProps}
         phase={TurnPhase.ACTING}
         hasMelded={false}
         hasSelectedCards={false}
         canClaimJoker={false}
-        onMeld={noop} onDiscard={noop} onLayOff={noop} onClaimJoker={noop}
       />
     );
-    expect(isDisabled(getByTestId('btn-meld'))).toBe(true);
+    expect(isDisabled(getByTestId('btn-stage'))).toBe(true);
     // Discard enabled
     expect(isDisabled(getByTestId('btn-discard'))).toBe(false);
     // No lay-off when not melded
     expect(queryByTestId('btn-lay-off')).toBeNull();
+    // No confirm meld when not staging
+    expect(queryByTestId('btn-meld')).toBeNull();
   });
 
-  it('shows Meld enabled when ACTING and cards selected', () => {
-    const { getByTestId } = render(
+  it('shows Stage enabled when ACTING and cards selected (not staging)', () => {
+    const { getByTestId, queryByTestId } = render(
       <ActionBar
+        {...defaultProps}
         phase={TurnPhase.ACTING}
         hasMelded={false}
         hasSelectedCards={true}
         canClaimJoker={false}
-        onMeld={noop} onDiscard={noop} onLayOff={noop} onClaimJoker={noop}
+        isStagingMeld={false}
       />
     );
-    expect(isDisabled(getByTestId('btn-meld'))).toBe(false);
+    expect(isDisabled(getByTestId('btn-stage'))).toBe(false);
+    // No Confirm Meld or Cancel yet
+    expect(queryByTestId('btn-meld')).toBeNull();
+    expect(queryByTestId('btn-cancel-meld')).toBeNull();
   });
 
   it('shows LayOff + Discard + ClaimJoker when melded with canClaimJoker', () => {
     const { getByTestId, queryByTestId } = render(
       <ActionBar
+        {...defaultProps}
         phase={TurnPhase.ACTING}
         hasMelded={true}
         hasSelectedCards={true}
         canClaimJoker={true}
-        onMeld={noop} onDiscard={noop} onLayOff={noop} onClaimJoker={noop}
       />
     );
     expect(getByTestId('btn-lay-off')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
     expect(getByTestId('btn-claim-joker')).toBeTruthy();
-    // No Meld button after first meld
-    expect(queryByTestId('btn-meld')).toBeNull();
+    // No Stage button after first meld
+    expect(queryByTestId('btn-stage')).toBeNull();
   });
 
   it('does not show LayOff when not yet melded', () => {
     const { queryByTestId } = render(
       <ActionBar
+        {...defaultProps}
         phase={TurnPhase.ACTING}
         hasMelded={false}
         hasSelectedCards={true}
         canClaimJoker={false}
-        onMeld={noop} onDiscard={noop} onLayOff={noop} onClaimJoker={noop}
       />
     );
     expect(queryByTestId('btn-lay-off')).toBeNull();
+  });
+
+  // Phase 4 staging tests
+
+  it('ACTING + not melded + staging (< 51 pts): Stage + Cancel visible, Confirm Meld disabled', () => {
+    const { getByTestId } = render(
+      <ActionBar
+        {...defaultProps}
+        phase={TurnPhase.ACTING}
+        hasMelded={false}
+        hasSelectedCards={true}
+        canClaimJoker={false}
+        isStagingMeld={true}
+        meldReady={false}
+      />
+    );
+    expect(getByTestId('btn-stage')).toBeTruthy();
+    expect(getByTestId('btn-cancel-meld')).toBeTruthy();
+    expect(isDisabled(getByTestId('btn-meld'))).toBe(true);
+  });
+
+  it('ACTING + not melded + staging (≥ 51 pts): Confirm Meld enabled', () => {
+    const { getByTestId } = render(
+      <ActionBar
+        {...defaultProps}
+        phase={TurnPhase.ACTING}
+        hasMelded={false}
+        hasSelectedCards={false}
+        canClaimJoker={false}
+        isStagingMeld={true}
+        meldReady={true}
+      />
+    );
+    expect(isDisabled(getByTestId('btn-meld'))).toBe(false);
+  });
+
+  it('ACTING + melded: Stage button not shown, unchanged lay-off/discard/claim behavior', () => {
+    const { queryByTestId, getByTestId } = render(
+      <ActionBar
+        {...defaultProps}
+        phase={TurnPhase.ACTING}
+        hasMelded={true}
+        hasSelectedCards={true}
+        canClaimJoker={false}
+        isStagingMeld={false}
+        meldReady={false}
+      />
+    );
+    expect(queryByTestId('btn-stage')).toBeNull();
+    expect(getByTestId('btn-lay-off')).toBeTruthy();
+    expect(getByTestId('btn-discard')).toBeTruthy();
   });
 });

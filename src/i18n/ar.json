@@ -39,8 +39,12 @@
       "meld": "ضع مجموعة",
       "discard": "ارمِ",
       "claimJoker": "استرد الجوكر",
-      "layOff": "أضف للمجموعة"
+      "layOff": "أضف للمجموعة",
+      "stageCombination": "تجهيز",
+      "confirmMeld": "تأكيد المجموعة",
+      "cancelMeld": "إلغاء المجموعة"
     },
+    "stagedPoints": "{{points}} نقطة مجهزة",
     "handOff": {
       "prompt": "مرر الجهاز إلى {{name}}",
       "confirm": "أنا {{name}}، أرِني يدي"
@@ -76,7 +80,8 @@
       "jokerClaimBreaks": "استبدال هذا الجوكر سيكسر المجموعة",
       "discardRequiredToWin": "يجب أن ترمي ورقة للفوز",
       "cardNotInHand": "هذه الورقة ليست في يدك",
-      "combinationNotOnTable": "هذه المجموعة ليست على الطاولة"
+      "combinationNotOnTable": "هذه المجموعة ليست على الطاولة",
+      "jokerClaimAmbiguousSet": "اختر ورقتَي الرمز المفقودتين لاسترداد هذا الجوكر"
     }
   }
 }

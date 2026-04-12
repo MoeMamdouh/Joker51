@@ -54,7 +54,8 @@ export type EngineErrorCode =
   | 'JOKER_CLAIM_BREAKS_COMBINATION'
   | 'DISCARD_REQUIRED_TO_WIN'
   | 'CARD_NOT_IN_HAND'
-  | 'COMBINATION_NOT_ON_TABLE';
+  | 'COMBINATION_NOT_ON_TABLE'
+  | 'JOKER_CLAIM_AMBIGUOUS_SET';
 
 // ─── Point Values ─────────────────────────────────────────────────────────────
 

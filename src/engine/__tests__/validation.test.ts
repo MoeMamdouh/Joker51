@@ -1,4 +1,4 @@
-import { validateCombination, calculateMeldPoints, isFullSet, isFullSequence } from '../validation';
+import { validateCombination, calculateMeldPoints, isFullSet, isFullSequence, getClaimableJokerCards } from '../validation';
 import { Card, Rank, Suit } from '../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -188,5 +188,69 @@ describe('isFullSequence', () => {
     const cards = [c(Rank.ACE, Suit.HEARTS), c(Rank.TWO, Suit.HEARTS), c(Rank.THREE, Suit.HEARTS)];
     const combo = { id: '1', type: 'sequence' as const, ownerId: 'p1', cards };
     expect(isFullSequence(combo)).toBe(false);
+  });
+});
+
+// ─── getClaimableJokerCards ───────────────────────────────────────────────────
+
+describe('getClaimableJokerCards', () => {
+  const combo = (cards: Card[], type: 'sequence' | 'set' = 'sequence') => ({
+    id: 'c1', type, ownerId: 'p1', cards,
+  });
+
+  it('returns null when combination has no Joker', () => {
+    const combination = combo([c(Rank.FIVE, Suit.CLUBS), c(Rank.SIX, Suit.CLUBS), c(Rank.SEVEN, Suit.CLUBS)]);
+    expect(getClaimableJokerCards(combination, [c(Rank.SIX, Suit.CLUBS)])).toBeNull();
+  });
+
+  it('sequence: returns [required card] when player holds it', () => {
+    // [5♣ Joker 7♣] — Joker must be 6♣
+    const combination = combo([c(Rank.FIVE, Suit.CLUBS), joker(), c(Rank.SEVEN, Suit.CLUBS)]);
+    const hand = [c(Rank.SIX, Suit.CLUBS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(1);
+    expect(result![0]).toEqual(c(Rank.SIX, Suit.CLUBS));
+  });
+
+  it('sequence: returns null when player does not hold the required card', () => {
+    const combination = combo([c(Rank.FIVE, Suit.CLUBS), joker(), c(Rank.SEVEN, Suit.CLUBS)]);
+    const hand = [c(Rank.EIGHT, Suit.CLUBS)];
+    expect(getClaimableJokerCards(combination, hand)).toBeNull();
+  });
+
+  it('4-card set (3 naturals + Joker): returns [one missing suit] when player holds it', () => {
+    // [9♠ 9♥ 9♦ Joker] — Joker must be 9♣
+    const combination = combo(
+      [c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.HEARTS), c(Rank.NINE, Suit.DIAMONDS), joker()],
+      'set'
+    );
+    const hand = [c(Rank.NINE, Suit.CLUBS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(1);
+    expect(result![0]).toEqual(c(Rank.NINE, Suit.CLUBS));
+  });
+
+  it('3-card set (2 naturals + Joker): returns [both missing suits] when player holds both', () => {
+    // [9♠ 9♥ Joker] — missing: 9♦ and 9♣
+    const combination = combo(
+      [c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.HEARTS), joker()],
+      'set'
+    );
+    const hand = [c(Rank.NINE, Suit.DIAMONDS), c(Rank.NINE, Suit.CLUBS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(2);
+    expect(result).toEqual(expect.arrayContaining([c(Rank.NINE, Suit.DIAMONDS), c(Rank.NINE, Suit.CLUBS)]));
+  });
+
+  it('3-card set (2 naturals + Joker): returns null when player holds only 1 of 2 missing suits', () => {
+    const combination = combo(
+      [c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.HEARTS), joker()],
+      'set'
+    );
+    const hand = [c(Rank.NINE, Suit.DIAMONDS)]; // holds only one of the two missing suits
+    expect(getClaimableJokerCards(combination, hand)).toBeNull();
   });
 });

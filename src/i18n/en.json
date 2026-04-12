@@ -39,8 +39,12 @@
       "meld": "Meld",
       "discard": "Discard",
       "claimJoker": "Claim Joker",
-      "layOff": "Lay Off"
+      "layOff": "Lay Off",
+      "stageCombination": "Stage",
+      "confirmMeld": "Confirm Meld",
+      "cancelMeld": "Cancel Meld"
     },
+    "stagedPoints": "{{points}} pts staged",
     "handOff": {
       "prompt": "Pass device to {{name}}",
       "confirm": "I'm {{name}}, show my hand"
@@ -76,7 +80,8 @@
       "jokerClaimBreaks": "Replacing this Joker would break the combination",
       "discardRequiredToWin": "You must discard to win",
       "cardNotInHand": "That card is not in your hand",
-      "combinationNotOnTable": "That combination is not on the table"
+      "combinationNotOnTable": "That combination is not on the table",
+      "jokerClaimAmbiguousSet": "Select both missing suit cards to claim this Joker"
     }
   }
 }
