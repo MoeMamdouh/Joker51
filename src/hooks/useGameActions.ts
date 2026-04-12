@@ -26,6 +26,7 @@ const ERROR_CODE_MAP: Record<string, string> = {
   JOKER_CLAIM_NOT_YOUR_TURN: 'jokerClaimNotYourTurn',
   JOKER_CLAIM_WRONG_CARD: 'jokerClaimWrongCard',
   JOKER_CLAIM_BREAKS_COMBINATION: 'jokerClaimBreaks',
+  JOKER_CLAIM_AMBIGUOUS_SET: 'jokerClaimAmbiguousSet',
   DISCARD_REQUIRED_TO_WIN: 'discardRequiredToWin',
   CARD_NOT_IN_HAND: 'cardNotInHand',
   COMBINATION_NOT_ON_TABLE: 'combinationNotOnTable',
@@ -38,10 +39,10 @@ interface GameActionResult {
 interface UseGameActionsReturn {
   drawFromPile(): GameActionResult;
   pickUpDiscardTop(): GameActionResult;
-  placeMeld(cards: Card[]): GameActionResult;
+  placeMeld(combinations: Card[][]): GameActionResult;
   layOffCard(card: Card, combinationId: string): GameActionResult;
   discardCard(card: Card): GameActionResult;
-  claimJokerFromCombination(combinationId: string, realCard: Card): GameActionResult;
+  claimJokerFromCombination(combinationId: string, realCards: Card[]): GameActionResult;
   startNextRound(): GameActionResult;
 }
 
@@ -82,12 +83,11 @@ export function useGameActions(): UseGameActionsReturn {
     return { error: null };
   }
 
-  // cards is treated as a single combination; wrap in array for engine
-  function placeMeld(cards: Card[]): GameActionResult {
+  function placeMeld(combinations: Card[][]): GameActionResult {
     if (!currentGame) return { error: null };
     const result = placeInitialMeld(currentGame, {
       playerId: currentGame.turnState.activePlayerId,
-      combinations: [cards],
+      combinations,
     });
     if (!result.success || !result.state) return errorResult(result.error!);
     persist(result.state);
@@ -117,12 +117,12 @@ export function useGameActions(): UseGameActionsReturn {
     return { error: null };
   }
 
-  function claimJokerFromCombination(combinationId: string, realCard: Card): GameActionResult {
+  function claimJokerFromCombination(combinationId: string, realCards: Card[]): GameActionResult {
     if (!currentGame) return { error: null };
     const result = claimJoker(currentGame, {
       playerId: currentGame.turnState.activePlayerId,
       combinationId,
-      realCard,
+      realCards,
     });
     if (!result.success || !result.state) return errorResult(result.error!);
     persist(result.state);

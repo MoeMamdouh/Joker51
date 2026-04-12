@@ -10,6 +10,7 @@ interface CombinationRowProps {
   onPress?(): void;
   showClaimJoker?: boolean;
   onClaimJoker?(): void;
+  testID?: string;
 }
 
 export function CombinationRow({
@@ -18,9 +19,10 @@ export function CombinationRow({
   onPress,
   showClaimJoker = false,
   onClaimJoker,
+  testID,
 }: CombinationRowProps) {
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID={testID ?? `combination-row-${combination.id}`}>
       <Text style={styles.ownerLabel}>{ownerName}</Text>
       <Pressable onPress={onPress} disabled={!onPress} style={styles.cardsRow}>
         {combination.cards.map((card, index) => (

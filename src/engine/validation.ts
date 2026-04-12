@@ -1,6 +1,75 @@
 import { Card, Combination, EngineErrorCode, Rank, RANK_ORDER, RANK_POINTS, Suit } from './types';
 
+const ALL_SUITS: Suit[] = [Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS];
+
 // ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Returns the Card[] the player must provide to claim the Joker in `combination`,
+ * or null if: no Joker present, player doesn't hold all required cards, or claim impossible.
+ *
+ * Sequences: 1 card (the card at the Joker's position).
+ * Sets with 3 natural cards: 1 card (the one missing suit).
+ * Sets with 2 natural cards: 2 cards (both missing suits).
+ */
+export function getClaimableJokerCards(
+  combination: Combination,
+  playerHand: readonly Card[]
+): Card[] | null {
+  const jokerIndex = combination.cards.findIndex(c => c.isJoker);
+  if (jokerIndex === -1) return null;
+
+  const nonJokers = combination.cards.filter(c => !c.isJoker) as Card[];
+
+  if (combination.type === 'set') {
+    const rank = nonJokers[0]?.rank;
+    if (!rank) return null;
+    const presentSuits = new Set(nonJokers.map(c => c.suit));
+    const missingSuits = ALL_SUITS.filter(s => !presentSuits.has(s));
+    const needed: Card[] = missingSuits.map(s => ({ rank, suit: s, isJoker: false }));
+    for (const card of needed) {
+      if (!playerHand.some(h => !h.isJoker && h.rank === card.rank && h.suit === card.suit)) {
+        return null;
+      }
+    }
+    return needed;
+  }
+
+  // Sequence: determine the card the Joker represents by its position
+  const suit = nonJokers[0]?.suit;
+  if (!suit) return null;
+
+  // Collect all rank indices occupied by non-Jokers
+  const aceHigh = nonJokers.some(c => c.rank === Rank.ACE) && nonJokers.some(c => c.rank === Rank.KING);
+  const rankIdx = (rank: Rank): number => {
+    if (rank === Rank.ACE && aceHigh) return 13;
+    return RANK_ORDER.indexOf(rank);
+  };
+
+  const naturalIndices = nonJokers.map(c => rankIdx(c.rank as Rank)).sort((a, b) => a - b);
+  const min = naturalIndices[0];
+  const max = naturalIndices[naturalIndices.length - 1];
+  const naturalSet = new Set(naturalIndices);
+  const gapRanks: Rank[] = [];
+  for (let r = min; r <= max; r++) {
+    if (!naturalSet.has(r)) gapRanks.push(RANK_ORDER[r]);
+  }
+
+  // Map Joker (by its position among all jokers) to its gap rank
+  const jokerPositions = combination.cards.reduce<number[]>((acc, c, i) => {
+    if (c.isJoker) acc.push(i);
+    return acc;
+  }, []);
+  const jokerPosInList = jokerPositions.indexOf(jokerIndex);
+  const assignedRank = gapRanks[jokerPosInList];
+  if (!assignedRank) return null;
+
+  const needed: Card = { rank: assignedRank, suit, isJoker: false };
+  if (!playerHand.some(h => !h.isJoker && h.rank === needed.rank && h.suit === needed.suit)) {
+    return null;
+  }
+  return [needed];
+}
 
 export function validateCombination(
   cards: Card[],

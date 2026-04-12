@@ -1,6 +1,6 @@
 export * from './types';
 export { initGame } from './deal';
-export { validateCombination, calculateMeldPoints, isFullSet, isFullSequence } from './validation';
+export { validateCombination, calculateMeldPoints, isFullSet, isFullSequence, getClaimableJokerCards } from './validation';
 export { deckCountForPlayers } from './deck';
 export { draw } from './actions/draw';
 export { placeInitialMeld } from './actions/meld';

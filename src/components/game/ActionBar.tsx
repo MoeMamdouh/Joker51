@@ -9,7 +9,11 @@ interface ActionBarProps {
   hasMelded: boolean;
   hasSelectedCards: boolean;
   canClaimJoker: boolean;
+  isStagingMeld: boolean;
+  meldReady: boolean;
   onMeld(): void;
+  onStage(): void;
+  onCancelMeld(): void;
   onDiscard(): void;
   onLayOff(): void;
   onClaimJoker(): void;
@@ -20,7 +24,11 @@ export function ActionBar({
   hasMelded,
   hasSelectedCards,
   canClaimJoker,
+  isStagingMeld,
+  meldReady,
   onMeld,
+  onStage,
+  onCancelMeld,
   onDiscard,
   onLayOff,
   onClaimJoker,
@@ -33,11 +41,27 @@ export function ActionBar({
     <View style={styles.container}>
       {!hasMelded && (
         <ActionButton
-          label={t('game.actions.meld')}
-          onPress={onMeld}
+          label={t('game.actions.stageCombination')}
+          onPress={onStage}
           disabled={isDrawing || !hasSelectedCards}
-          testID="btn-meld"
+          testID="btn-stage"
         />
+      )}
+      {!hasMelded && isStagingMeld && (
+        <>
+          <ActionButton
+            label={t('game.actions.confirmMeld')}
+            onPress={onMeld}
+            disabled={isDrawing || !meldReady}
+            testID="btn-meld"
+          />
+          <ActionButton
+            label={t('game.actions.cancelMeld')}
+            onPress={onCancelMeld}
+            disabled={isDrawing}
+            testID="btn-cancel-meld"
+          />
+        </>
       )}
       {hasMelded && (
         <ActionButton

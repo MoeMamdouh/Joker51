@@ -26,10 +26,10 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, already in project): Follow standard conventions
 
 ## Recent Changes
+- 004-meld-table-management: Added TypeScript 5.x strict mode (already in project) + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18next, React Native Reanimated 3+, @react-native-async-storage/async-storage
+- 004-meld-table-management: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 003-game-board-screen: Added TypeScript 5.x strict mode (already in project) + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18next, React Native Reanimated 3+, @react-native-async-storage/async-storage
-- 002-game-setup-screen: Added TypeScript 5.x (strict mode) — React Native + Expo SDK ~54 + Expo Router (navigation), Zustand (state), i18next + react-i18next (i18n), expo-localization (locale detection), @react-native-async-storage/async-storage (persistence), React Native Reanimated 3+ (animations)
 
-- main: Added TypeScript 5.9 (strict mode, already in project) + None (engine is pure TS). Dev: Jest + ts-jest (to be added)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -13,9 +13,22 @@ import { ScoreboardRow } from '../components/game/ScoreboardRow';
 import { HandOffOverlay } from '../components/game/HandOffOverlay';
 import { TableArea } from '../components/game/TableArea';
 import { ActionBar } from '../components/game/ActionBar';
+import { StagedMeldPreview } from '../components/game/StagedMeldPreview';
 import { RoundSummaryOverlay } from '../components/game/RoundSummaryOverlay';
 import { colors, spacing, typography, radii } from '../theme/tokens';
-import { Combination, GameStatus, TurnPhase } from '../engine/types';
+import { Card, Combination, GameStatus, TurnPhase } from '../engine/types';
+import { validateCombination, calculateMeldPoints, getClaimableJokerCards } from '../engine';
+
+const ERROR_UI_MAP: Record<string, string> = {
+  COMBINATION_TOO_SHORT: 'combinationTooShort',
+  SET_TOO_LONG: 'setTooLong',
+  SET_DUPLICATE_SUIT: 'setDuplicateSuit',
+  SEQUENCE_MIXED_SUITS: 'sequenceMixedSuits',
+  SEQUENCE_NOT_CONSECUTIVE: 'sequenceNotConsecutive',
+  ACE_WRAPAROUND: 'aceWraparound',
+  JOKER_LIMIT_EXCEEDED: 'jokerLimitExceeded',
+  INVALID_COMBINATION: 'invalidCombination',
+};
 
 export function GameBoardScreen() {
   const { t } = useTranslation();
@@ -28,6 +41,7 @@ export function GameBoardScreen() {
   const [nextPlayerName, setNextPlayerName] = useState('');
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [stagedCombinations, setStagedCombinations] = useState<Card[][]>([]);
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function showError(msg: string) {
@@ -67,14 +81,26 @@ export function GameBoardScreen() {
   const playerList = config.players.map(p => ({ playerId: p.id, name: p.name }));
   const opponentPlayers = playerList.filter(p => p.playerId !== activePlayerId);
 
-  // Joker claim: check if active player holds a replacement card for any combo's joker
+  // Staged meld derived values
+  const stagedPointTotal = calculateMeldPoints(stagedCombinations);
+  const meldReady = stagedPointTotal >= 51;
+  const isStagingMeld = stagedCombinations.length > 0;
+
+  // Turn-order sorted combinations (US3)
+  const orderedCombinations = [...tableState.combinations].sort(
+    (a, b) =>
+      config.players.findIndex(p => p.id === a.ownerId) -
+      config.players.findIndex(p => p.id === b.ownerId)
+  );
+
+  // Joker claim: engine helper validates player holds ALL required replacement cards
   function canClaimJokerForCombination(combination: Combination): boolean {
     if (!hasMelded) return false;
-    return combination.cards.some(c => c.isJoker);
+    return getClaimableJokerCards(combination, activeCards) !== null;
   }
 
   const canClaimJoker = hasMelded &&
-    tableState.combinations.some(canClaimJokerForCombination);
+    orderedCombinations.some(canClaimJokerForCombination);
 
   // Cumulative scores
   function getCumulativeScore(playerId: string): number {
@@ -116,10 +142,29 @@ export function GameBoardScreen() {
     if (result.error) showError(result.error);
   }
 
-  function handleMeld() {
-    const result = actions.placeMeld(selectedCards);
+  function handleStageCombination() {
+    if (selectedCards.length === 0) return;
+    const vr = validateCombination(selectedCards, { isInitialMeld: true });
+    if (!vr.valid) {
+      showError(t(`game.errors.${vr.error ? (ERROR_UI_MAP[vr.error] ?? vr.error) : 'invalidCombination'}`));
+      return;
+    }
+    setStagedCombinations(prev => [...prev, [...selectedCards]]);
+    clearSelection();
+  }
+
+  function handleConfirmMeld() {
+    const result = actions.placeMeld(stagedCombinations);
     if (result.error) showError(result.error);
-    else clearSelection();
+    else {
+      setStagedCombinations([]);
+      clearSelection();
+    }
+  }
+
+  function handleCancelMeld() {
+    setStagedCombinations([]);
+    clearSelection();
   }
 
   function handleDiscard() {
@@ -150,11 +195,17 @@ export function GameBoardScreen() {
   }
 
   function handleClaimJoker(combinationId: string) {
-    if (selectedCards.length === 0) {
-      showError(t('game.errors.cardNotInHand'));
+    const combo = orderedCombinations.find(c => c.id === combinationId);
+    if (!combo) {
+      showError(t('game.errors.combinationNotOnTable'));
       return;
     }
-    const result = actions.claimJokerFromCombination(combinationId, selectedCards[0]);
+    const realCards = getClaimableJokerCards(combo, activeCards);
+    if (!realCards) {
+      showError(t('game.errors.jokerClaimWrongCard'));
+      return;
+    }
+    const result = actions.claimJokerFromCombination(combinationId, realCards);
     if (result.error) showError(result.error);
     else clearSelection();
   }
@@ -215,12 +266,19 @@ export function GameBoardScreen() {
 
       {/* Table combinations */}
       <TableArea
-        combinations={tableState.combinations}
+        combinations={orderedCombinations}
         players={playerList}
         canLayOff={hasMelded && !isDrawing}
         onCombinationPress={handleLayOff}
         canClaimJokerForCombination={canClaimJokerForCombination}
         onClaimJoker={handleClaimJoker}
+      />
+
+      {/* Staged meld preview */}
+      <StagedMeldPreview
+        stagedCombinations={stagedCombinations}
+        pointTotal={stagedPointTotal}
+        onCancel={handleCancelMeld}
       />
 
       {/* Error banner */}
@@ -236,7 +294,11 @@ export function GameBoardScreen() {
         hasMelded={hasMelded}
         hasSelectedCards={selectedCards.length > 0}
         canClaimJoker={canClaimJoker}
-        onMeld={handleMeld}
+        isStagingMeld={isStagingMeld}
+        meldReady={meldReady}
+        onMeld={handleConfirmMeld}
+        onStage={handleStageCombination}
+        onCancelMeld={handleCancelMeld}
         onDiscard={handleDiscard}
         onLayOff={() => {
           // lay-off is triggered by tapping a combination row in TableArea
