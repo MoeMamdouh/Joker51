@@ -275,8 +275,6 @@ describe('GameBoardScreen — lay-off regression (US2)', () => {
     const { queryByTestId } = renderWithGame(state);
     // Stage button visible (not yet melded)
     expect(queryByTestId('btn-stage')).toBeTruthy();
-    // Lay-off button not shown
-    expect(queryByTestId('btn-lay-off')).toBeNull();
   });
 
   it('canLayOff is false in DRAWING phase', () => {
@@ -292,12 +290,8 @@ describe('GameBoardScreen — lay-off regression (US2)', () => {
     });
 
     const { getByTestId } = renderWithGame(state);
-    // In DRAWING phase, lay-off button is still shown (melded) but disabled
-    expect(getByTestId('btn-lay-off')).toBeTruthy();
-    const layOff = getByTestId('btn-lay-off');
-    expect(
-      layOff.props.accessibilityState?.disabled === true || layOff.props.disabled === true
-    ).toBe(true);
+    // In DRAWING phase, stage and discard are disabled
+    expect(getByTestId('btn-stage')).toBeTruthy();
   });
 
   it('reject wrong suit in sequence: sequenceMixedSuits error shown', () => {

@@ -15,7 +15,6 @@ interface ActionBarProps {
   onStage(): void;
   onCancelMeld(): void;
   onDiscard(): void;
-  onLayOff(): void;
   onClaimJoker(): void;
 }
 
@@ -30,7 +29,6 @@ export function ActionBar({
   onStage,
   onCancelMeld,
   onDiscard,
-  onLayOff,
   onClaimJoker,
 }: ActionBarProps) {
   const { t } = useTranslation();
@@ -61,14 +59,7 @@ export function ActionBar({
           />
         </>
       )}
-      {hasMelded && (
-        <ActionButton
-          label={t('game.actions.layOff')}
-          onPress={onLayOff}
-          disabled={isDrawing || !hasSelectedCards}
-          testID="btn-lay-off"
-        />
-      )}
+
       <ActionButton
         label={t('game.actions.discard')}
         onPress={onDiscard}

@@ -303,9 +303,6 @@ export function GameBoardScreen() {
         onStage={handleStageCombination}
         onCancelMeld={handleCancelMeld}
         onDiscard={handleDiscard}
-        onLayOff={() => {
-          // lay-off is triggered by tapping a combination row in TableArea
-        }}
         onClaimJoker={() => {
           // claim joker is triggered by tapping the claim badge in CombinationRow
         }}

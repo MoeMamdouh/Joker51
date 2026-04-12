@@ -11,7 +11,6 @@ jest.mock('react-i18next', () => ({
         'game.actions.confirmMeld': 'Confirm Meld',
         'game.actions.cancelMeld': 'Cancel',
         'game.actions.discard': 'Discard',
-        'game.actions.layOff': 'Lay Off',
         'game.actions.claimJoker': 'Claim Joker',
       };
       return map[key] ?? key;
@@ -36,7 +35,6 @@ const defaultProps = {
   onStage: noop,
   onCancelMeld: noop,
   onDiscard: noop,
-  onLayOff: noop,
   onClaimJoker: noop,
 };
 
@@ -68,8 +66,7 @@ describe('ActionBar', () => {
     expect(isDisabled(getByTestId('btn-stage'))).toBe(true);
     // Discard enabled
     expect(isDisabled(getByTestId('btn-discard'))).toBe(false);
-    // No lay-off when not melded
-    expect(queryByTestId('btn-lay-off')).toBeNull();
+    // No confirm meld when not melded
     // No confirm meld when not staging
     expect(queryByTestId('btn-meld')).toBeNull();
   });
@@ -91,7 +88,7 @@ describe('ActionBar', () => {
     expect(queryByTestId('btn-cancel-meld')).toBeNull();
   });
 
-  it('shows Stage + LayOff + Discard + ClaimJoker when melded with canClaimJoker', () => {
+  it('shows Stage + Discard + ClaimJoker when melded with canClaimJoker', () => {
     const { getByTestId } = render(
       <ActionBar
         {...defaultProps}
@@ -101,24 +98,9 @@ describe('ActionBar', () => {
         canClaimJoker={true}
       />
     );
-    // Stage is now always visible (melded players can place new combinations)
     expect(getByTestId('btn-stage')).toBeTruthy();
-    expect(getByTestId('btn-lay-off')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
     expect(getByTestId('btn-claim-joker')).toBeTruthy();
-  });
-
-  it('does not show LayOff when not yet melded', () => {
-    const { queryByTestId } = render(
-      <ActionBar
-        {...defaultProps}
-        phase={TurnPhase.ACTING}
-        hasMelded={false}
-        hasSelectedCards={true}
-        canClaimJoker={false}
-      />
-    );
-    expect(queryByTestId('btn-lay-off')).toBeNull();
   });
 
   // Phase 4 staging tests
@@ -155,7 +137,7 @@ describe('ActionBar', () => {
     expect(isDisabled(getByTestId('btn-meld'))).toBe(false);
   });
 
-  it('ACTING + melded: Stage button shown (additional melds allowed), lay-off/discard also shown', () => {
+  it('ACTING + melded: Stage button shown (additional melds allowed), discard also shown', () => {
     const { getByTestId } = render(
       <ActionBar
         {...defaultProps}
@@ -167,9 +149,7 @@ describe('ActionBar', () => {
         meldReady={false}
       />
     );
-    // Stage is now shown for melded players too (additional combinations)
     expect(getByTestId('btn-stage')).toBeTruthy();
-    expect(getByTestId('btn-lay-off')).toBeTruthy();
     expect(getByTestId('btn-discard')).toBeTruthy();
   });
 });
