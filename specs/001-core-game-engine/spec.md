@@ -31,11 +31,13 @@ has exactly 14 cards, draw pile has the correct remaining count, and discard pil
 
 **Acceptance Scenarios**:
 
-1. **Given** 4 players, **When** a game is initialized, **Then** each player holds exactly 14 cards,
-   the draw pile has 54 − (4×14) − 1 = 1 card, and the discard pile has exactly 1 face-up card.
-2. **Given** 6 players (requires 2 decks), **When** a game is initialized, **Then** all 108 cards
-   are distributed correctly and players are notified that 2 decks are in use.
-3. **Given** 2 players, **When** a game is initialized, **Then** 1 deck is used and deal succeeds.
+1. **Given** 3 players, **When** a game is initialized, **Then** each player holds exactly 14 cards,
+   the draw pile has 54 − (3×14) − 1 = 11 cards, and the discard pile has exactly 1 face-up card.
+2. **Given** 4 players (requires 2 decks), **When** a game is initialized, **Then** all 108 cards
+   are distributed correctly, draw pile has 108 − (4×14) − 1 = 51 cards, and players are
+   notified that 2 decks are in use.
+3. **Given** 2 players, **When** a game is initialized, **Then** 1 deck is used,
+   draw pile has 54 − (2×14) − 1 = 25 cards, and deal succeeds.
 4. **Given** a shuffled deck, **When** two consecutive initializations occur, **Then** card order
    differs between them (shuffle is non-deterministic).
 
@@ -206,7 +208,8 @@ each player receives the exact penalty described by the rules.
 ### Functional Requirements
 
 - **FR-001**: The engine MUST create a deck of exactly 54 cards (52 standard + 2 Jokers) per deck
-  unit, scaling to 2 or 3 decks based on player count (≤4 players: 1 deck, ≤6: 2 decks, ≤8: 3 decks).
+  unit, scaling to 2 or 3 decks based on player count (2–3 players: 1 deck, 4–6 players: 2 decks,
+  7–8 players: 3 decks). This satisfies the minimum formula (players × 14) + 10 for all counts.
 - **FR-002**: The engine MUST shuffle the combined deck randomly before each game.
 - **FR-003**: The engine MUST deal exactly 14 cards to each player from the shuffled deck.
 - **FR-004**: The engine MUST place the remaining cards face-down as the draw pile and flip
@@ -243,9 +246,11 @@ each player receives the exact penalty described by the rules.
   to the next player in deal order (circular). The updated `GameState` MUST reflect the new
   active player so the caller needs no knowledge of turn-order logic.
 - **FR-015**: Every engine action function MUST return a typed result object
-  `{ success: boolean, error?: string }`. Game-rule violations MUST be communicated via
-  `success: false` with a human-readable `error` string — the engine MUST NOT throw exceptions
-  for invalid game actions. Exceptions are reserved for programming errors (e.g., null input).
+  `{ success: boolean, error?: EngineErrorCode }`. Game-rule violations MUST be communicated via
+  `success: false` with a typed `EngineErrorCode` string literal — the engine MUST NOT throw
+  exceptions for invalid game actions, and MUST NOT return raw human-readable strings (those
+  are produced by the UI i18n layer from the code). Exceptions are reserved for programming
+  errors (e.g., null input).
 
 ### Key Entities
 
@@ -265,9 +270,13 @@ each player receives the exact penalty described by the rules.
   `GameState`; every action produces a new snapshot. The caller uses `status` to orchestrate
   round progression and game termination.
 - **ActionResult**: The return type of every engine action —
-  `{ success: boolean, state?: GameState, error?: string }`.
+  `{ success: boolean, state?: GameState, error?: EngineErrorCode }`.
   On success, `state` contains the new immutable `GameState` snapshot. On failure, `state` is
-  absent and `error` contains a human-readable reason suitable for display.
+  absent and `error` is a typed `EngineErrorCode` string literal that the UI layer translates
+  via the i18n system.
+- **EngineErrorCode**: A typed string literal union enumerating all possible rejection reasons
+  (e.g., `"MELD_BELOW_51_POINTS"`, `"NOT_YOUR_TURN"`, `"INVALID_COMBINATION"`,
+  `"JOKER_CLAIM_WRONG_CARD"`, `"MUST_DISCARD_TO_WIN"`). Full list defined in data-model.
 
 ---
 

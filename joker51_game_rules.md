@@ -18,11 +18,11 @@
 
 ### Player Count & Deck Scaling
 
-| Decks | Cards in Play | Max Players |
+| Decks | Cards in Play | Player Range |
 |---|---|---|
-| 1 deck | 54 cards (52 + 2 Jokers) | 4 players |
-| 2 decks | 108 cards (104 + 4 Jokers) | 6 players |
-| 3 decks | 162 cards (156 + 6 Jokers) | 8 players |
+| 1 deck | 54 cards (52 + 2 Jokers) | 2–3 players |
+| 2 decks | 108 cards (104 + 4 Jokers) | 4–6 players |
+| 3 decks | 162 cards (156 + 6 Jokers) | 7–8 players |
 
 **Rule:** Minimum cards required = (Players × 14) + 10 (draw pile reserve).  
 Players must be informed when 2+ decks are in use.
