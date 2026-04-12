@@ -17,9 +17,19 @@ const config: Config = {
     {
       displayName: 'components',
       preset: 'jest-expo',
-      roots: ['<rootDir>/src/components', '<rootDir>/src/screens'],
-      testMatch: ['**/__tests__/**/*.test.tsx', '**/__tests__/**/*.test.ts'],
+      testMatch: [
+        '<rootDir>/src/components/**/__tests__/**/*.test.tsx',
+        '<rootDir>/src/components/**/__tests__/**/*.test.ts',
+        '<rootDir>/src/screens/**/__tests__/**/*.test.tsx',
+        '<rootDir>/src/screens/**/__tests__/**/*.test.ts',
+      ],
       moduleFileExtensions: ['tsx', 'ts', 'jsx', 'js'],
+      moduleNameMapper: {
+        // Expo SDK 54 + Jest 30: prevent lazy require of ImportMetaRegistry
+        // from firing when isInsideTestCode === false
+        '^expo/src/winter$': '<rootDir>/__mocks__/expo-winter.js',
+        '^expo/src/winter/ImportMetaRegistry$': '<rootDir>/__mocks__/expo-winter-import-meta.js',
+      },
       transformIgnorePatterns: [
         'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
       ],

@@ -23,17 +23,20 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// Mock AsyncStorage
-const mockGetItem = jest.fn();
-const mockRemoveItem = jest.fn();
+// Mock AsyncStorage — factory must not reference outer variables (jest.mock is hoisted)
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: {
-    getItem: mockGetItem,
-    removeItem: mockRemoveItem,
+    getItem: jest.fn(),
+    removeItem: jest.fn(),
     setItem: jest.fn(),
   },
 }));
+
+// Resolve typed references after mock is registered
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const mockGetItem = AsyncStorage.getItem as jest.Mock;
+const mockRemoveItem = AsyncStorage.removeItem as jest.Mock;
 
 // Mock engine
 jest.mock('../../engine', () => ({

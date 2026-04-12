@@ -26,5 +26,57 @@
   "validation": {
     "nameRequired": "Name is required",
     "nameTooLong": "Name must be 20 characters or fewer"
+  },
+  "game": {
+    "turnIndicator": "{{name}}'s turn",
+    "phase": {
+      "drawing": "Draw a card",
+      "acting": "Play your hand"
+    },
+    "drawPile": "Draw pile",
+    "discardPile": "Discard pile",
+    "actions": {
+      "meld": "Meld",
+      "discard": "Discard",
+      "claimJoker": "Claim Joker",
+      "layOff": "Lay Off"
+    },
+    "handOff": {
+      "prompt": "Pass device to {{name}}",
+      "confirm": "I'm {{name}}, show my hand"
+    },
+    "roundSummary": {
+      "title": "Round {{round}} Complete",
+      "penalty": "Penalty: {{points}} pts",
+      "nextRound": "Next Round",
+      "gameOver": "Game Over",
+      "playAgain": "Play Again",
+      "winner": "Round Winner",
+      "coWinners": "Round Co-Winners"
+    },
+    "score": {
+      "label": "{{name}}: {{score}}"
+    },
+    "deckCount": "{{count}} decks",
+    "errors": {
+      "notYourTurn": "It's not your turn",
+      "wrongPhase": "You can't do that right now",
+      "invalidCombination": "Invalid combination",
+      "combinationTooShort": "Combination is too short",
+      "setTooLong": "A set can have at most 4 cards",
+      "setDuplicateSuit": "A set cannot have duplicate suits",
+      "sequenceMixedSuits": "A sequence must be all the same suit",
+      "sequenceNotConsecutive": "Cards must be consecutive in a sequence",
+      "aceWraparound": "Ace cannot wrap around",
+      "jokerLimitExceeded": "Too many Jokers in this combination",
+      "meldBelow51": "Meld must be worth at least 51 points",
+      "notYetMelded": "You must place your initial meld first",
+      "jokerClaimNotYourTurn": "You can only claim a Joker on your turn",
+      "jokerClaimWrongCard": "You don't have the card to replace this Joker",
+      "jokerClaimBreaks": "Replacing this Joker would break the combination",
+      "discardRequiredToWin": "You must discard to win",
+      "cardNotInHand": "That card is not in your hand",
+      "combinationNotOnTable": "That combination is not on the table"
+    }
   }
 }
