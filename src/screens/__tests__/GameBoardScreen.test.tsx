@@ -302,6 +302,16 @@ describe('GameBoardScreen — lay-off regression (US2)', () => {
   });
 });
 
+// ─── Language selector absent on game board (US1) ────────────────────────────
+
+describe('GameBoardScreen — no language toggle during gameplay', () => {
+  it('does not render a language-selector element on the game board', () => {
+    const state = buildGameState();
+    const { queryByTestId } = renderWithGame(state);
+    expect(queryByTestId('language-selector')).toBeNull();
+  });
+});
+
 // ─── Scoreboard button & modal (US2) ─────────────────────────────────────────
 
 describe('GameBoardScreen — scoreboard button (US2)', () => {

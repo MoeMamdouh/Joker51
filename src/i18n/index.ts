@@ -8,7 +8,7 @@ import ar from './ar.json';
 
 const LANGUAGE_KEY = '@joker51/language';
 
-export async function initI18n(): Promise<void> {
+export async function initI18n(): Promise<'en' | 'ar'> {
   let savedLocale: 'en' | 'ar' = 'en';
 
   try {
@@ -35,6 +35,8 @@ export async function initI18n(): Promise<void> {
     },
     compatibilityJSON: 'v4',
   });
+
+  return savedLocale;
 }
 
 export default i18next;

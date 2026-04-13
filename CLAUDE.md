@@ -10,6 +10,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-13
 - TypeScript 5.x strict mode + React Native + Expo SDK ~54; Zustand (state); @react-native-async-storage/async-storage (persistence) (005-sort-meld-fix-layoff)
 - TypeScript 5.x strict mode + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18nex (006-round-end-scoring)
 - AsyncStorage — `@joker51/savedSession` (no new keys) (006-round-end-scoring)
+- TypeScript 5.x strict mode + i18next, react-i18next, React Native `I18nManager`, Zustand, AsyncStorage (006-round-end-scoring)
+- AsyncStorage — key `@joker51/language` (already established) (006-round-end-scoring)
 
 - TypeScript 5.9 (strict mode, already in project) + None (engine is pure TS). Dev: Jest + ts-jest (to be added) (main)
 
@@ -29,9 +31,9 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, already in project): Follow standard conventions
 
 ## Recent Changes
+- 006-round-end-scoring: Added TypeScript 5.x strict mode + i18next, react-i18next, React Native `I18nManager`, Zustand, AsyncStorage
 - 006-round-end-scoring: Added TypeScript 5.x strict mode + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18nex
 - 005-sort-meld-fix-layoff: Added TypeScript 5.x strict mode + React Native + Expo SDK ~54; Zustand (state); @react-native-async-storage/async-storage (persistence)
-- 004-meld-table-management: Added TypeScript 5.x strict mode (already in project) + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18next, React Native Reanimated 3+, @react-native-async-storage/async-storage
 
 
 <!-- MANUAL ADDITIONS START -->

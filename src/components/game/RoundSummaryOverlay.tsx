@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radii } from '../../theme/tokens';
+import { useLanguageStore } from '../../store/languageStore';
+import { formatNumber } from '../../i18n/formatNumber';
 
 interface PlayerScore {
   playerId: string;
@@ -36,6 +38,7 @@ export function RoundSummaryOverlay({
   onPlayAgain,
 }: RoundSummaryOverlayProps) {
   const { t } = useTranslation();
+  const locale = useLanguageStore(s => s.locale);
 
   const winnerLabel = roundWinnerIds.length > 1
     ? t('game.roundSummary.coWinners')
@@ -62,10 +65,10 @@ export function RoundSummaryOverlay({
                 {player.name}
               </Text>
               <Text style={[styles.penaltyText, isWinner && styles.winnerText]}>
-                {t('game.roundSummary.penalty', { points: latestPenalty })}
+                {t('game.roundSummary.penalty', { points: formatNumber(latestPenalty, locale) })}
               </Text>
               <Text style={[styles.totalText, isWinner && styles.winnerText]}>
-                {t('game.score.label', { name: '', score: player.score }).trim()}
+                {t('game.score.label', { name: '', score: formatNumber(player.score, locale) }).trim()}
               </Text>
             </View>
           );
