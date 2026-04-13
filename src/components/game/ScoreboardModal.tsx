@@ -3,6 +3,8 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radii } from '../../theme/tokens';
 import { RoundResult } from '../../engine/types';
+import { useLanguageStore } from '../../store/languageStore';
+import { formatNumber } from '../../i18n/formatNumber';
 
 interface PlayerInfo {
   playerId: string;
@@ -55,6 +57,7 @@ export function ScoreboardModal({
   onClose,
 }: ScoreboardModalProps) {
   const { t } = useTranslation();
+  const locale = useLanguageStore(s => s.locale);
 
   if (!visible) return null;
 
@@ -110,11 +113,11 @@ export function ScoreboardModal({
                     key={i}
                     style={[styles.roundCell, styles.dataText, entry.isLeader && styles.leaderText]}
                   >
-                    {penalty === null ? t('game.scoreboard.pending') : String(penalty)}
+                    {penalty === null ? t('game.scoreboard.pending') : formatNumber(penalty, locale)}
                   </Text>
                 ))}
                 <Text style={[styles.totalCell, styles.dataText, entry.isLeader && styles.leaderText]}>
-                  {String(entry.total)}
+                  {formatNumber(entry.total, locale)}
                 </Text>
               </View>
             ))}

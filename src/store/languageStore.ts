@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { I18nManager } from 'react-native';
 import i18next from 'i18next';
 
 const LANGUAGE_KEY = '@joker51/language';
@@ -11,14 +12,21 @@ interface LanguageState {
   loadPersistedLocale(): Promise<void>;
 }
 
-export const useLanguageStore = create<LanguageState>((set) => ({
+export const useLanguageStore = create<LanguageState>((set, get) => ({
   locale: 'en',
   isRTL: false,
 
   setLocale(locale) {
-    const isRTL = locale === 'ar';
-    set({ locale, isRTL });
+    const prevIsRTL = get().isRTL;
+    const nextIsRTL = locale === 'ar';
+
+    set({ locale, isRTL: nextIsRTL });
     i18next.changeLanguage(locale);
+
+    if (prevIsRTL !== nextIsRTL) {
+      I18nManager.forceRTL(nextIsRTL);
+    }
+
     // Persist preference (fire-and-forget)
     AsyncStorage.setItem(LANGUAGE_KEY, locale).catch(() => {});
   },

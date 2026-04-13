@@ -115,4 +115,11 @@ describe('SetupScreen', () => {
     fireEvent.press(getByTestId('start-game-button'));
     expect(mockReplace).not.toHaveBeenCalled();
   });
+
+  it('renders the language selector on the setup screen', async () => {
+    mockGetItem.mockResolvedValue(null);
+    const { getByTestId } = render(<SetupScreen />);
+    await act(async () => {});
+    expect(getByTestId('language-selector')).toBeTruthy();
+  });
 });

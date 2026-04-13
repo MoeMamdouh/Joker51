@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { CardTile } from './CardTile';
 import { spacing } from '../../theme/tokens';
 import { Card } from '../../engine/types';
+import { useDirection } from '../../contexts/DirectionContext';
 
 interface HandAreaProps {
   cards: Card[];
@@ -11,9 +12,13 @@ interface HandAreaProps {
 }
 
 export function HandArea({ cards, selectedCards, onCardPress }: HandAreaProps) {
+  const { isRTL } = useDirection();
+
   if (cards.length === 0) {
     return <View style={styles.empty} />;
   }
+
+  const displayCards = isRTL ? [...cards].reverse() : cards;
 
   return (
     <ScrollView
@@ -21,7 +26,7 @@ export function HandArea({ cards, selectedCards, onCardPress }: HandAreaProps) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.content}
     >
-      {cards.map((card, index) => (
+      {displayCards.map((card, index) => (
         <CardTile
           key={index}
           card={card}

@@ -3,6 +3,12 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ScoreboardModal } from '../ScoreboardModal';
 import { RoundResult } from '../../../engine/types';
 
+let mockLocale: 'en' | 'ar' = 'en';
+
+jest.mock('../../../store/languageStore', () => ({
+  useLanguageStore: jest.fn((selector) => selector({ locale: mockLocale })),
+}));
+
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
@@ -153,5 +159,40 @@ describe('ScoreboardModal', () => {
     );
     expect(getByTestId('scoreboard-leader-p1')).toBeTruthy();
     expect(() => getByTestId('scoreboard-leader-p2')).toThrow();
+  });
+
+  it('displays Eastern Arabic numerals for scores when locale is "ar"', () => {
+    mockLocale = 'ar';
+    const { getAllByText, queryAllByText } = render(
+      <ScoreboardModal
+        visible={true}
+        totalRounds={4}
+        players={players}
+        roundResults={[round1]}
+        onClose={jest.fn()}
+      />
+    );
+    // Bob has penalty 42 → should display as ٤٢ (penalty cell + total cell)
+    expect(getAllByText('٤٢').length).toBeGreaterThan(0);
+    // Western digit '42' should not appear
+    expect(queryAllByText('42')).toHaveLength(0);
+    mockLocale = 'en';
+  });
+
+  it('displays Western digits for scores when locale is "en"', () => {
+    mockLocale = 'en';
+    const { getAllByText, queryAllByText } = render(
+      <ScoreboardModal
+        visible={true}
+        totalRounds={4}
+        players={players}
+        roundResults={[round1]}
+        onClose={jest.fn()}
+      />
+    );
+    // Bob has penalty 42 → appears in round cell + total cell
+    expect(getAllByText('42').length).toBeGreaterThan(0);
+    // Eastern Arabic numeral should not appear
+    expect(queryAllByText('٤٢')).toHaveLength(0);
   });
 });

@@ -14,7 +14,7 @@
 
 **Purpose**: Verify the existing i18n baseline before any changes are made.
 
-- [ ] T001 Audit `src/i18n/en.json` vs `src/i18n/ar.json` for key parity — list any keys present in one file but missing from the other; fix any gaps before proceeding
+- [x] T001 Audit `src/i18n/en.json` vs `src/i18n/ar.json` for key parity — list any keys present in one file but missing from the other; fix any gaps before proceeding
 
 **Checkpoint**: Both translation files have identical key structure. Proceed to Phase 2.
 
@@ -26,8 +26,8 @@
 
 **⚠️ CRITICAL**: Phase 4 (US2) cannot start until this phase is complete.
 
-- [ ] T002 Add `common.rtlRestartNotice` key to `src/i18n/en.json` with value `"Restart the app to apply the new layout direction."`
-- [ ] T003 [P] Add `common.rtlRestartNotice` key to `src/i18n/ar.json` with Egyptian colloquial value (confirm exact phrasing with product owner; placeholder: `"أعد تشغيل التطبيق عشان التخطيط الجديد يتطبق."`)
+- [x] T002 Add `common.rtlRestartNotice` key to `src/i18n/en.json` with value `"Restart the app to apply the new layout direction."`
+- [x] T003 [P] Add `common.rtlRestartNotice` key to `src/i18n/ar.json` with Egyptian colloquial value (confirm exact phrasing with product owner; placeholder: `"أعد تشغيل التطبيق عشان التخطيط الجديد يتطبق."`)
 
 **Checkpoint**: Both JSON files contain `common.rtlRestartNotice`. Phase 4 can now start.
 
@@ -41,11 +41,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T004 [US3] Update `game.actions.*` keys in `src/i18n/ar.json` to Egyptian colloquial: `meld` → `انزل`, `discard` → `ارمي`, `claimJoker` → `اسحب الجوكر`, `stageCombination` → `جمز`, `confirmMeld` → `انزل`, `cancelMeld` → `كنسل`, `layOff` → `كمل`
-- [ ] T005 [P] [US3] Update `game.handOff.*` keys in `src/i18n/ar.json`: `prompt` → `باسي الجهاز لـ{{name}}`; `confirm` → `أنا {{name}}، وريني إيدي`
-- [ ] T006 [P] [US3] Update `game.roundSummary.*` and `game.scoreboard.*` keys in `src/i18n/ar.json`: `nextRound` → `الدور الجاي`, `gameOver` → `اللعبة خلصت`, `playAgain` → `العب تاني`, `scoreboard.leader` → `في الأول`
-- [ ] T007 [US3] Update all `game.errors.*` keys in `src/i18n/ar.json` to Egyptian grammar — replace `يمكنك` → `تقدر`, `يجب` → `لازم`, `الآن` → `دلوقتي` throughout
-- [ ] T008 [US3] Update remaining `setup.*`, `common.*`, `validation.*` keys in `src/i18n/ar.json` to Egyptian colloquial where MSA phrasing remains (e.g., `setup.resumeButton` → `رجع للعبة`, `validation.nameRequired` → `لازم تكتب اسمك`, `validation.nameTooLong` → `الاسم ميعداش 20 حرف`)
+- [x] T004 [US3] Update `game.actions.*` keys in `src/i18n/ar.json` to Egyptian colloquial: `meld` → `انزل`, `discard` → `ارمي`, `claimJoker` → `اسحب الجوكر`, `stageCombination` → `جمز`, `confirmMeld` → `انزل`, `cancelMeld` → `كنسل`, `layOff` → `كمل`
+- [x] T005 [P] [US3] Update `game.handOff.*` keys in `src/i18n/ar.json`: `prompt` → `باسي الجهاز لـ{{name}}`; `confirm` → `أنا {{name}}، وريني إيدي`
+- [x] T006 [P] [US3] Update `game.roundSummary.*` and `game.scoreboard.*` keys in `src/i18n/ar.json`: `nextRound` → `الدور الجاي`, `gameOver` → `اللعبة خلصت`, `playAgain` → `العب تاني`, `scoreboard.leader` → `في الأول`
+- [x] T007 [US3] Update all `game.errors.*` keys in `src/i18n/ar.json` to Egyptian grammar — replace `يمكنك` → `تقدر`, `يجب` → `لازم`, `الآن` → `دلوقتي` throughout
+- [x] T008 [US3] Update remaining `setup.*`, `common.*`, `validation.*` keys in `src/i18n/ar.json` to Egyptian colloquial where MSA phrasing remains (e.g., `setup.resumeButton` → `رجع للعبة`, `validation.nameRequired` → `لازم تكتب اسمك`, `validation.nameTooLong` → `الاسم ميعداش 20 حرف`)
 
 **Checkpoint**: All ar.json values are Egyptian colloquial. Switch to Arabic in the app — every string across every screen reads naturally in Egyptian dialect.
 
@@ -61,13 +61,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Extend `src/store/languageStore.ts`: in `setLocale`, call `I18nManager.forceRTL(locale === 'ar')` and set `needsRestart: true` when direction changes (i.e., previous `isRTL` !== new `isRTL`); add `needsRestart: boolean` field (default `false`) and `dismissRestartBanner(): void` action that sets `needsRestart` to `false`
-- [ ] T010 [P] [US2] Create `src/components/ui/RtlRestartBanner.tsx` — dismissible non-blocking banner component; accepts `visible: boolean` and `onDismiss(): void` props; renders `null` when `visible` is `false`; displays `t('common.rtlRestartNotice')` with a dismiss button; uses design tokens exclusively (no raw style values); positioned as a non-modal overlay at the top of the screen
-- [ ] T011 [P] [US2] Update `src/components/game/HandArea.tsx` — import `useDirection` from `src/contexts/DirectionContext`; when `isRTL` is `true`, reverse the `cards` array before mapping to `CardTile` components (use `[...cards].reverse()` — do not mutate the prop)
-- [ ] T012 [US2] Wire `RtlRestartBanner` into the app root layout: import `useLanguageStore` and `RtlRestartBanner` in `app/_layout.tsx`; pass `visible={needsRestart}` and `onDismiss={dismissRestartBanner}`; banner must be mounted above the navigator so it appears on all screens
-- [ ] T013 [P] [US2] Write tests for `RtlRestartBanner` in `src/components/ui/__tests__/RtlRestartBanner.test.tsx`: (a) renders `null` when `visible` is `false`, (b) renders banner text when `visible` is `true`, (c) calls `onDismiss` when dismiss control is pressed
-- [ ] T014 [P] [US2] Write tests for RTL card order in `src/components/game/__tests__/HandArea.test.tsx`: (a) renders cards in original order when LTR, (b) renders cards in reversed order when RTL (first card in prop array is the last `CardTile` rendered)
-- [ ] T015 [P] [US2] Write tests for `languageStore` direction signalling in `src/store/__tests__/languageStore.test.ts`: (a) `setLocale('ar')` sets `needsRestart: true` when starting from `'en'`, (b) `setLocale('en')` from `'en'` does NOT set `needsRestart`, (c) `dismissRestartBanner()` sets `needsRestart: false`
+- [x] T009 [US2] Extend `src/store/languageStore.ts`: in `setLocale`, call `I18nManager.forceRTL(locale === 'ar')` and set `needsRestart: true` when direction changes (i.e., previous `isRTL` !== new `isRTL`); add `needsRestart: boolean` field (default `false`) and `dismissRestartBanner(): void` action that sets `needsRestart` to `false`
+- [x] T010 [P] [US2] Create `src/components/ui/RtlRestartBanner.tsx` — dismissible non-blocking banner component; accepts `visible: boolean` and `onDismiss(): void` props; renders `null` when `visible` is `false`; displays `t('common.rtlRestartNotice')` with a dismiss button; uses design tokens exclusively (no raw style values); positioned as a non-modal overlay at the top of the screen
+- [x] T011 [P] [US2] Update `src/components/game/HandArea.tsx` — import `useDirection` from `src/contexts/DirectionContext`; when `isRTL` is `true`, reverse the `cards` array before mapping to `CardTile` components (use `[...cards].reverse()` — do not mutate the prop)
+- [x] T012 [US2] Wire `RtlRestartBanner` into the app root layout: import `useLanguageStore` and `RtlRestartBanner` in `app/_layout.tsx`; pass `visible={needsRestart}` and `onDismiss={dismissRestartBanner}`; banner must be mounted above the navigator so it appears on all screens
+- [x] T013 [P] [US2] Write tests for `RtlRestartBanner` in `src/components/ui/__tests__/RtlRestartBanner.test.tsx`: (a) renders `null` when `visible` is `false`, (b) renders banner text when `visible` is `true`, (c) calls `onDismiss` when dismiss control is pressed
+- [x] T014 [P] [US2] Write tests for RTL card order in `src/components/game/__tests__/HandArea.test.tsx`: (a) renders cards in original order when LTR, (b) renders cards in reversed order when RTL (first card in prop array is the last `CardTile` rendered)
+- [x] T015 [P] [US2] Write tests for `languageStore` direction signalling in `src/store/__tests__/languageStore.test.ts`: (a) `setLocale('ar')` sets `needsRestart: true` when starting from `'en'`, (b) `setLocale('en')` from `'en'` does NOT set `needsRestart`, (c) `dismissRestartBanner()` sets `needsRestart: false`
 
 **Checkpoint**: Switch EN→AR on setup screen — text updates immediately, dismissible banner appears at top. Navigate to game board — cards render right-to-left. Dismiss banner — it clears. Restart app — Arabic is still active, no banner on cold start.
 
@@ -83,8 +83,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] Add tests for `languageStore` persistence in `src/store/__tests__/languageStore.test.ts`: (a) `loadPersistedLocale` restores `'ar'` when `'ar'` is stored in AsyncStorage, (b) first-launch with no stored value defaults to `'en'`, (c) `setLocale` writes the new locale to AsyncStorage
-- [ ] T017 [P] [US1] Add a test in `src/screens/__tests__/SetupScreen.test.tsx` confirming the `language-selector` testID is present on the setup screen; add a complementary test in `src/screens/__tests__/GameBoardScreen.test.tsx` confirming no element with `testID="language-selector"` is rendered on the game board
+- [x] T016 [P] [US1] Add tests for `languageStore` persistence in `src/store/__tests__/languageStore.test.ts`: (a) `loadPersistedLocale` restores `'ar'` when `'ar'` is stored in AsyncStorage, (b) first-launch with no stored value defaults to `'en'`, (c) `setLocale` writes the new locale to AsyncStorage
+- [x] T017 [P] [US1] Add a test in `src/screens/__tests__/SetupScreen.test.tsx` confirming the `language-selector` testID is present on the setup screen; add a complementary test in `src/screens/__tests__/GameBoardScreen.test.tsx` confirming no element with `testID="language-selector"` is rendered on the game board
 
 **Checkpoint**: All US1 acceptance criteria verified by tests. Language persists across simulated cold starts.
 
@@ -98,11 +98,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T018 [US4] Create `src/i18n/formatNumber.ts` — export `function formatNumber(value: number, locale: 'en' | 'ar'): string`; for `'ar'` replace each digit `0–9` with the corresponding Eastern Arabic digit `٠١٢٣٤٥٦٧٨٩`; for `'en'` return `String(value)`; pure function, no imports from stores or React
-- [ ] T019 [P] [US4] Write unit tests for `formatNumber` in `src/i18n/__tests__/formatNumber.test.ts`: test `0`, `42`, `100`, `999` for both locales; verify `formatNumber(42, 'ar')` returns `'٤٢'`; verify `formatNumber(42, 'en')` returns `'42'`; verify triple-digit values render without truncation
-- [ ] T020 [P] [US4] Update `src/components/game/ScoreboardModal.tsx` — import `formatNumber` and `useLanguageStore`; replace `String(penalty)` with `formatNumber(penalty, locale)` and `String(entry.total)` with `formatNumber(entry.total, locale)` where `locale` is read from `useLanguageStore(s => s.locale)`
-- [ ] T021 [P] [US4] Update `src/components/game/RoundSummaryOverlay.tsx` — import `formatNumber` and `useLanguageStore`; replace raw numeric interpolations for penalty and cumulative score values with `formatNumber(value, locale)` calls
-- [ ] T022 [US4] Update tests in `src/components/game/__tests__/ScoreboardModal.test.tsx` to verify that when rendered with Arabic locale active, score cells display Eastern Arabic numerals (e.g., `٤٢`) not Western digits
+- [x] T018 [US4] Create `src/i18n/formatNumber.ts` — export `function formatNumber(value: number, locale: 'en' | 'ar'): string`; for `'ar'` replace each digit `0–9` with the corresponding Eastern Arabic digit `٠١٢٣٤٥٦٧٨٩`; for `'en'` return `String(value)`; pure function, no imports from stores or React
+- [x] T019 [P] [US4] Write unit tests for `formatNumber` in `src/i18n/__tests__/formatNumber.test.ts`: test `0`, `42`, `100`, `999` for both locales; verify `formatNumber(42, 'ar')` returns `'٤٢'`; verify `formatNumber(42, 'en')` returns `'42'`; verify triple-digit values render without truncation
+- [x] T020 [P] [US4] Update `src/components/game/ScoreboardModal.tsx` — import `formatNumber` and `useLanguageStore`; replace `String(penalty)` with `formatNumber(penalty, locale)` and `String(entry.total)` with `formatNumber(entry.total, locale)` where `locale` is read from `useLanguageStore(s => s.locale)`
+- [x] T021 [P] [US4] Update `src/components/game/RoundSummaryOverlay.tsx` — import `formatNumber` and `useLanguageStore`; replace raw numeric interpolations for penalty and cumulative score values with `formatNumber(value, locale)` calls
+- [x] T022 [US4] Update tests in `src/components/game/__tests__/ScoreboardModal.test.tsx` to verify that when rendered with Arabic locale active, score cells display Eastern Arabic numerals (e.g., `٤٢`) not Western digits
 
 **Checkpoint**: Open Scoreboard and Round Summary in Arabic mode — all scores and totals display in Eastern Arabic numerals. Card tiles are unaffected.
 
@@ -112,9 +112,9 @@
 
 **Purpose**: Final validation sweep across all user stories.
 
-- [ ] T023 [P] Run grep audit for hardcoded Arabic/English display strings in all `src/components/**/*.tsx` and `src/screens/**/*.tsx` files — confirm zero raw string literals used for UI text (all go through `t()`)
-- [ ] T024 Run the full quickstart.md testing checklist manually on iOS Simulator and Android Emulator: language switch, persistence, RTL card order, restart banner, Eastern numerals, zero English strings in Arabic mode
-- [ ] T025 [P] Confirm `src/i18n/ar.json` and `src/i18n/en.json` have identical key sets — run a parity check (e.g., compare top-level and nested keys); any missing key is a merge-blocking error per the constitution
+- [x] T023 [P] Run grep audit for hardcoded Arabic/English display strings in all `src/components/**/*.tsx` and `src/screens/**/*.tsx` files — confirm zero raw string literals used for UI text (all go through `t()`)
+- [x] T024 Run the full quickstart.md testing checklist manually on iOS Simulator and Android Emulator: language switch, persistence, RTL card order, restart banner, Eastern numerals, zero English strings in Arabic mode
+- [x] T025 [P] Confirm `src/i18n/ar.json` and `src/i18n/en.json` have identical key sets — run a parity check (e.g., compare top-level and nested keys); any missing key is a merge-blocking error per the constitution
 
 ---
 

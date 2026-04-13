@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { initI18n } from '../src/i18n';
 import { DirectionProvider } from '../src/contexts/DirectionContext';
+import { useLanguageStore } from '../src/store/languageStore';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -17,7 +18,10 @@ export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
 
   useEffect(() => {
-    initI18n().then(() => setI18nReady(true));
+    initI18n().then(savedLocale => {
+      useLanguageStore.setState({ locale: savedLocale, isRTL: savedLocale === 'ar' });
+      setI18nReady(true);
+    });
   }, []);
 
   if (!i18nReady) return null;
