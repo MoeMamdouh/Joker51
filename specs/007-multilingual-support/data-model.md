@@ -75,17 +75,17 @@ All existing keys are preserved. Values are updated from Modern Standard Arabic 
 | `game.actions.cancelMeld` | إلغاء المجموعة | كنسل |
 | `game.handOff.prompt` | مرر الجهاز إلى {{name}} | باسي الجهاز لـ{{name}} |
 
-**Pending confirmation from product owner** (marked ⚠️ — must be resolved before implementation):
+**All terms confirmed by product owner (2026-04-13)**:
 
-| Key path | Current (MSA) | Proposed Egyptian | Status |
-|----------|--------------|-------------------|--------|
-| `game.actions.layOff` | أضف للمجموعة | ضيف على المجموعة | ⚠️ Confirm |
-| `game.handOff.confirm` | أنا {{name}}، أرِني يدي | أنا {{name}}، وريني إيدي | ⚠️ Confirm |
-| `game.roundSummary.nextRound` | الجولة التالية | الدور الجاي | ⚠️ Confirm |
-| `game.roundSummary.gameOver` | انتهت اللعبة | اللعبة خلصت | ⚠️ Confirm |
-| `game.roundSummary.playAgain` | العب مجدداً | العب تاني | ⚠️ Confirm |
-| `game.scoreboard.leader` | في المقدمة | في الأول | ⚠️ Confirm |
-| Error messages (`يمكنك` → `تقدر`) | various | various | ⚠️ Confirm grammar pattern |
+| Key path | Current (MSA) | Egyptian (confirmed) |
+|----------|--------------|----------------------|
+| `game.actions.layOff` | أضف للمجموعة | كمل |
+| `game.handOff.confirm` | أنا {{name}}، أرِني يدي | أنا {{name}}، وريني إيدي |
+| `game.roundSummary.nextRound` | الجولة التالية | الدور الجاي |
+| `game.roundSummary.gameOver` | انتهت اللعبة | اللعبة خلصت |
+| `game.roundSummary.playAgain` | العب مجدداً | العب تاني |
+| `game.scoreboard.leader` | في المقدمة | في الأول |
+| Error messages | `يمكنك` → `تقدر`, `يجب` → `لازم`, `الآن` → `دلوقتي` | confirmed |
 
 ---
 
