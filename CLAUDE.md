@@ -12,6 +12,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-13
 - AsyncStorage — `@joker51/savedSession` (no new keys) (006-round-end-scoring)
 - TypeScript 5.x strict mode + i18next, react-i18next, React Native `I18nManager`, Zustand, AsyncStorage (006-round-end-scoring)
 - AsyncStorage — key `@joker51/language` (already established) (006-round-end-scoring)
+- TypeScript 5.9 stric + React Native + Expo SDK ~54, Expo Router ~6.0, Zustand ^5.0, React Native Reanimated ~4.1.1, React Native Gesture Handler ~2.28.0, AsyncStorage 2.2.0 (008-phase-7-game)
+- AsyncStorage — new key `@joker51/cardStyle`; existing `@joker51/language` and `@joker51/savedSession` unchanged (008-phase-7-game)
 
 - TypeScript 5.9 (strict mode, already in project) + None (engine is pure TS). Dev: Jest + ts-jest (to be added) (main)
 
@@ -31,9 +33,9 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, already in project): Follow standard conventions
 
 ## Recent Changes
+- 008-phase-7-game: Added TypeScript 5.9 stric + React Native + Expo SDK ~54, Expo Router ~6.0, Zustand ^5.0, React Native Reanimated ~4.1.1, React Native Gesture Handler ~2.28.0, AsyncStorage 2.2.0
 - 006-round-end-scoring: Added TypeScript 5.x strict mode + i18next, react-i18next, React Native `I18nManager`, Zustand, AsyncStorage
 - 006-round-end-scoring: Added TypeScript 5.x strict mode + React Native + Expo SDK ~54, Expo Router, Zustand, i18next + react-i18nex
-- 005-sort-meld-fix-layoff: Added TypeScript 5.x strict mode + React Native + Expo SDK ~54; Zustand (state); @react-native-async-storage/async-storage (persistence)
 
 
 <!-- MANUAL ADDITIONS START -->
