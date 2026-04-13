@@ -61,6 +61,14 @@
     "score": {
       "label": "{{name}}: {{score}}"
     },
+    "scoreboard": {
+      "title": "Scoreboard",
+      "round": "R{{number}}",
+      "total": "Total",
+      "pending": "—",
+      "close": "Close",
+      "leader": "Leading"
+    },
     "deckCount": "{{count}} decks",
     "errors": {
       "notYourTurn": "It's not your turn",
