@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, SafeAreaView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { useGameStore } from '../store/gameStore';
@@ -15,6 +15,7 @@ import { TableArea } from '../components/game/TableArea';
 import { ActionBar } from '../components/game/ActionBar';
 import { StagedMeldPreview } from '../components/game/StagedMeldPreview';
 import { RoundSummaryOverlay } from '../components/game/RoundSummaryOverlay';
+import { ScoreboardModal } from '../components/game/ScoreboardModal';
 import { colors, spacing, typography, radii } from '../theme/tokens';
 import { Card, Combination, GameStatus, TurnPhase } from '../engine/types';
 import { validateCombination, calculateMeldPoints, getClaimableJokerCards } from '../engine';
@@ -40,6 +41,7 @@ export function GameBoardScreen() {
   const [pendingHandOff, setPendingHandOff] = useState(false);
   const [nextPlayerName, setNextPlayerName] = useState('');
   const [showRoundSummary, setShowRoundSummary] = useState(false);
+  const [showScoreboard, setShowScoreboard] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [stagedCombinations, setStagedCombinations] = useState<Card[][]>([]);
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -237,11 +239,20 @@ export function GameBoardScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Scoreboard */}
-      <ScoreboardRow
-        players={playerList}
-        roundResults={roundResults}
-        activePlayerId={activePlayerId}
-      />
+      <View style={styles.scoreboardHeader}>
+        <ScoreboardRow
+          players={playerList}
+          roundResults={roundResults}
+          activePlayerId={activePlayerId}
+        />
+        <Pressable
+          style={styles.scoreboardButton}
+          onPress={() => setShowScoreboard(true)}
+          testID="btn-scoreboard"
+        >
+          <Text style={styles.scoreboardButtonText}>{t('game.scoreboard.title')}</Text>
+        </Pressable>
+      </View>
 
       {/* Opponent badges */}
       <View style={styles.opponents}>
@@ -330,6 +341,14 @@ export function GameBoardScreen() {
         />
       )}
 
+      <ScoreboardModal
+        visible={showScoreboard}
+        totalRounds={config.totalRounds}
+        players={playerList}
+        roundResults={roundResults}
+        onClose={() => setShowScoreboard(false)}
+      />
+
       {showRoundSummary && (
         <RoundSummaryOverlay
           currentRound={currentRound}
@@ -378,5 +397,23 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.card.face,
     textAlign: 'center',
+  },
+  scoreboardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingRight: spacing.sm,
+  },
+  scoreboardButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  scoreboardButtonText: {
+    ...typography.caption,
+    color: colors.text.secondary,
   },
 });

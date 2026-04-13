@@ -61,6 +61,14 @@
     "score": {
       "label": "{{name}}: {{score}}"
     },
+    "scoreboard": {
+      "title": "لوحة النتائج",
+      "round": "ج{{number}}",
+      "total": "المجموع",
+      "pending": "—",
+      "close": "إغلاق",
+      "leader": "في المقدمة"
+    },
     "deckCount": "{{count}} ورقات",
     "errors": {
       "notYourTurn": "ليس دورك",

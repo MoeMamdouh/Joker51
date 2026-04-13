@@ -31,8 +31,8 @@ The following are already implemented and require no code changes:
 
 **⚠️ CRITICAL**: US2 cannot begin until both locale files have the scoreboard keys.
 
-- [ ] T001 Add `game.scoreboard` key group to `src/i18n/en.json` with keys: `title` ("Scoreboard"), `round` ("R{{number}}"), `total` ("Total"), `pending` ("—"), `close` ("Close"), `leader` ("Leading")
-- [ ] T002 [P] Add `game.scoreboard` key group to `src/i18n/ar.json` with Arabic translations: `title` ("لوحة النتائج"), `round` ("ج{{number}}"), `total` ("المجموع"), `pending` ("—"), `close` ("إغلاق"), `leader` ("في المقدمة")
+- [x] T001 Add `game.scoreboard` key group to `src/i18n/en.json` with keys: `title` ("Scoreboard"), `round` ("R{{number}}"), `total` ("Total"), `pending` ("—"), `close` ("Close"), `leader` ("Leading")
+- [x] T002 [P] Add `game.scoreboard` key group to `src/i18n/ar.json` with Arabic translations: `title` ("لوحة النتائج"), `round` ("ج{{number}}"), `total` ("المجموع"), `pending` ("—"), `close` ("إغلاق"), `leader` ("في المقدمة")
 
 **Checkpoint**: Both locale files have `game.scoreboard.*` keys. `npm test` still passes (no regressions).
 
@@ -48,13 +48,13 @@ The following are already implemented and require no code changes:
 
 ### Tests for User Story 2
 
-- [ ] T003 [US2] Write failing component tests for `ScoreboardModal` in `src/components/game/__tests__/ScoreboardModal.test.tsx` covering: renders nothing when `visible=false`; renders title and close button when `visible=true`; shows completed round scores and "—" for pending rounds; highlights leader (lowest total); handles tie (two leaders); `onClose` called on close button press
-- [ ] T004 [P] [US2] Write failing integration test for scoreboard button in `src/screens/__tests__/GameBoardScreen.test.tsx`: renders `btn-scoreboard` button when game is in progress; pressing it shows the scoreboard overlay; scoreboard overlay is not visible initially
+- [x] T003 [US2] Write failing component tests for `ScoreboardModal` in `src/components/game/__tests__/ScoreboardModal.test.tsx` covering: renders nothing when `visible=false`; renders title and close button when `visible=true`; shows completed round scores and "—" for pending rounds; highlights leader (lowest total); handles tie (two leaders); `onClose` called on close button press
+- [x] T004 [P] [US2] Write failing integration test for scoreboard button in `src/screens/__tests__/GameBoardScreen.test.tsx`: renders `btn-scoreboard` button when game is in progress; pressing it shows the scoreboard overlay; scoreboard overlay is not visible initially
 
 ### Implementation for User Story 2
 
-- [ ] T005 [US2] Implement `ScoreboardModal` in `src/components/game/ScoreboardModal.tsx` per contract in `specs/006-round-end-scoring/contracts/scoreboard-modal-ui.md`: absolute-fill overlay (zIndex 200), per-round score grid (player rows × round columns), "—" for pending rounds, leader highlight via `colors.accent` tint, Close button; all styles via `src/theme/tokens.ts`, all strings via i18next (turn T003 GREEN)
-- [ ] T006 [US2] Add scoreboard button and `ScoreboardModal` to `src/screens/GameBoardScreen.tsx`: import `ScoreboardModal`, add `const [showScoreboard, setShowScoreboard] = useState(false)`, add `<Pressable testID="btn-scoreboard">` near `ScoreboardRow`, render `<ScoreboardModal visible={showScoreboard} ... onClose={() => setShowScoreboard(false)} />` (turn T004 GREEN)
+- [x] T005 [US2] Implement `ScoreboardModal` in `src/components/game/ScoreboardModal.tsx` per contract in `specs/006-round-end-scoring/contracts/scoreboard-modal-ui.md`: absolute-fill overlay (zIndex 200), per-round score grid (player rows × round columns), "—" for pending rounds, leader highlight via `colors.accent` tint, Close button; all styles via `src/theme/tokens.ts`, all strings via i18next (turn T003 GREEN)
+- [x] T006 [US2] Add scoreboard button and `ScoreboardModal` to `src/screens/GameBoardScreen.tsx`: import `ScoreboardModal`, add `const [showScoreboard, setShowScoreboard] = useState(false)`, add `<Pressable testID="btn-scoreboard">` near `ScoreboardRow`, render `<ScoreboardModal visible={showScoreboard} ... onClose={() => setShowScoreboard(false)} />` (turn T004 GREEN)
 
 **Checkpoint**: All `ScoreboardModal` tests and `GameBoardScreen` scoreboard tests pass. Manual test: open scoreboard during game, verify layout, close it. `npm test` passes with no regressions.
 
@@ -64,8 +64,8 @@ The following are already implemented and require no code changes:
 
 **Purpose**: Final validation across the full feature.
 
-- [ ] T007 Run `npm test` and confirm overall test suite passes with no regressions; verify new component tests are green
-- [ ] T008 [P] Perform manual acceptance checks per `specs/006-round-end-scoring/quickstart.md` scenarios 3–5 (scoreboard modal scenarios):
+- [x] T007 Run `npm test` and confirm overall test suite passes with no regressions; verify new component tests are green
+- [x] T008 [P] Perform manual acceptance checks per `specs/006-round-end-scoring/quickstart.md` scenarios 3–5 (scoreboard modal scenarios):
   - Scenario 3: Scoreboard button opens modal during active round
   - Scenario 4: Completed round columns filled; pending columns show "—"
   - Scenario 5: Tied leaders both highlighted
