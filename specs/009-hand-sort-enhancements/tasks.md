@@ -66,7 +66,7 @@
 **Independent Test**: Render `HandArea` with mixed cards → press "By Rank" tab → cards group by rank → press "By Suit" tab → cards revert to suit groups → stage a card → both tabs are non-interactive.
 
 - [ ] T013 [US3] Create `src/components/ui/SegmentedControl.tsx`: props `{ options: Array<{label:string; value:string}>, value:string, onChange:(v:string)=>void, disabled?:boolean, testID?:string }`; active tab: `colors.accent` fill + white text; inactive tab: `colors.surface` fill + `colors.text.secondary` text; disabled: full control at `opacity: 0.4` with `pointerEvents='none'`; all sizing from tokens (`spacing`, `radii`, `typography.caption`)
-- [ ] T014 [US3] In `src/components/game/HandArea.tsx`: replace the existing `<Pressable>` "Sort ↕" toolbar with `<SegmentedControl>` using `options={[{label:t('game.actions.sortBySuit'), value:'bySuit'}, {label:t('game.actions.sortByRank'), value:'byRank'}]}`, `value={sortMode}`, `onChange={(v)=> v==='bySuit' ? sortBySuit() : sortByRank()}`, `disabled={isDragging || (stagedCards?.length ?? 0) > 0}`, `testID="sort-mode-control"`; remove old `sortButton`, `sortButtonText`, `sortIcon` styles; remove the `sortByPower` import
+- [ ] T014 [US3] In `src/components/game/HandArea.tsx`: replace the existing `<Pressable>` "Sort ↕" toolbar with `<SegmentedControl>` using `options={[{label:t('game.actions.sortBySuit'), value:'bySuit'}, {label:t('game.actions.sortByRank'), value:'byRank'}]}`, `value={sortMode}`, `onChange={(v)=> v==='bySuit' ? sortBySuit() : sortByRank()}`, `disabled={isDragging || (stagedCards?.length ?? 0) > 0}` (disabled during active drag per FR-005 and during staging per FR-005), `testID="sort-mode-control"`; remove old `sortButton`, `sortButtonText`, `sortIcon` styles; remove the `sortByPower` import
 - [ ] T015 [P] [US3] Update `src/components/game/__tests__/HandArea.test.tsx`: add tests for segmented control presence (`getByTestId('sort-mode-control')`), that pressing "By Rank" calls `sortByRank` equivalent (mock `useHandOrder`), and that the control has `disabled` state when `stagedCards` is non-empty
 
 ---
@@ -77,8 +77,9 @@
 
 **Independent Test**: Sort → drag card 0 to position 3 → draw a new card → dragged card is still at position 3, new card appended at end → press "By Suit" → all cards re-sorted, dragged card moves.
 
-- [ ] T016 [US4] Verify in `src/hooks/useHandOrder.ts` (T003 covers this, but add explicit test): when `moveCard` is called, `isCustomOrder` becomes `true`; subsequent draw appends new card at end (not sorted position); calling `sortBySuit()` or `sortByRank()` resets `isCustomOrder` to `false` and re-sorts
-- [ ] T017 [P] [US4] Add tests to `src/hooks/__tests__/useHandOrder.test.ts` specifically for the drag-persist contract: drag → draw → verify order preserved; drag → sortBySuit → verify order reset; drag → sortByRank → verify order reset
+*Note: The drag-persist implementation itself is covered by T003 (useHandOrder). This phase adds the explicit test coverage.*
+
+- [ ] T016 [P] [US4] Add tests to `src/hooks/__tests__/useHandOrder.test.ts` for the drag-persist contract: drag → draw → verify order preserved (new card at end); drag → sortBySuit → verify full re-sort (isCustomOrder cleared); drag → sortByRank → verify full re-sort
 
 ---
 
@@ -86,10 +87,10 @@
 
 **Purpose**: Verification pass, RTL correctness, token audit, remove dead code.
 
-- [ ] T018 In `src/components/game/HandArea.tsx`: verify RTL toolbar alignment — `SegmentedControl` must sit at `flex-start` when `isRTL=true` (same as old `toolbarRTL` style); confirm card display order reversal still works with the new sort modes
-- [ ] T019 [P] Token audit — confirm `src/components/ui/SegmentedControl.tsx` and all `HandArea` style changes reference only tokens from `src/theme/tokens.ts`; no raw hex, dp, or font-size values
-- [ ] T020 [P] Run full test suite (`npm test`); fix any snapshot or unit regressions; TypeScript strict-mode check (`npx tsc --noEmit`); confirm 0 errors
-- [ ] T021 [P] Remove dead code: delete the old `sortIcon`, `sortButton`, `sortButtonText` style entries from `HandArea.tsx` (replaced by `SegmentedControl`); confirm `sortByPower` is fully removed from `useHandOrder.ts` and all callers
+- [ ] T017 In `src/components/game/HandArea.tsx`: verify RTL toolbar alignment — `SegmentedControl` must sit at `flex-start` when `isRTL=true` (same as old `toolbarRTL` style); confirm card display order reversal still works with the new sort modes
+- [ ] T018 [P] Token audit — confirm `src/components/ui/SegmentedControl.tsx` and all `HandArea` style changes reference only tokens from `src/theme/tokens.ts`; no raw hex, dp, or font-size values
+- [ ] T019 [P] Run full test suite (`npm test`); fix any snapshot or unit regressions; TypeScript strict-mode check (`npx tsc --noEmit`); confirm 0 errors
+- [ ] T020 [P] Remove dead code: delete the old `sortIcon`, `sortButton`, `sortButtonText` style entries from `HandArea.tsx` (replaced by `SegmentedControl`); confirm `sortByPower` is fully removed from `useHandOrder.ts` and all callers
 
 ---
 
@@ -115,7 +116,7 @@
 
 **Phase 2**: T002→T003→T004→T005 are sequential (single file, dependencies). T006 (tests) written after T005.
 
-**Phase 3+**: T008, T012, T015, T017, T018, T019, T020, T021 are all marked `[P]` — different files, safe to parallelize across stories once foundational phase is done.
+**Phase 3+**: T008, T012, T015, T016, T018, T019, T020 are all marked `[P]` — different files, safe to parallelize across stories once foundational phase is done.
 
 ---
 

@@ -95,15 +95,14 @@ When a player drags a card to a new position, that custom order is maintained fo
 - **FR-002**: When a single card is drawn, the hand MUST insert the card at the correct sorted position for the active sort mode and display a "new card" indicator on that card.
 - **FR-003**: The "new card" indicator MUST auto-dismiss after 3 seconds and also dismiss immediately when the player taps the card or stages the card for a meld. A staged card must never show the indicator simultaneously with the staged/dimmed state.
 - **FR-004**: Initial deal (multiple cards at once) MUST NOT trigger the "new card" indicator on any card.
-- **FR-005**: The hand toolbar MUST display a segmented control with two tabs — "By Suit" and "By Rank" — placed side by side. The active tab MUST have a filled/highlighted background; the inactive tab MUST be outlined. The control MUST be greyed out and non-interactive while cards are staged.
+- **FR-005**: The hand toolbar MUST display a segmented control with two tabs — "By Suit" and "By Rank" — placed side by side. The active tab MUST have a filled/highlighted background; the inactive tab MUST be outlined. The control MUST be greyed out and non-interactive while any cards are staged for a meld or while an active card drag is in progress.
 - **FR-006**: "By Suit" sort MUST order cards: Jokers → ♠ (A→K→Q→…→3→2) → ♥ (A→K→…→2) → ♣ (A→K→…→2) → ♦ (A→K→…→2). Ace is the highest value card, positioned immediately after Jokers and above King.
 - **FR-007**: "By Rank" sort MUST order cards: Jokers → all A (♠♥♣♦) → all K → all Q → … → all 3 → all 2. Within each rank group, suit order is ♠ ♥ ♣ ♦.
 - **FR-008**: Both sort modes MUST start with the highest-value cards on the left (or right in RTL layout), descending to the lowest.
 - **FR-009**: When a player drags a card to a new position, that custom position MUST be preserved on subsequent renders until a sort button is pressed.
 - **FR-010**: When a sort button is pressed, any custom drag order MUST be discarded and the hand re-sorted according to the selected mode.
-- **FR-011**: Both sort buttons MUST be disabled (non-interactive, visually dimmed) while any cards are staged for a meld.
-- **FR-012**: The last-used sort mode MUST be remembered within the current game session. It need not persist across app restarts.
-- **FR-013**: In RTL layout, the sort button bar alignment and card direction MUST mirror the LTR layout appropriately.
+- **FR-011**: The last-used sort mode MUST be remembered within the current game session. It need not persist across app restarts. (Note: implemented as component state; session-scope is guaranteed because the game screen remains mounted throughout a game session.)
+- **FR-012**: In RTL layout, the sort control alignment and card display direction MUST mirror the LTR layout appropriately.
 
 ### Key Entities
 
