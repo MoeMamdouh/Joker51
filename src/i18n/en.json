@@ -27,6 +27,17 @@
     "nameRequired": "Name is required",
     "nameTooLong": "Name must be 20 characters or fewer"
   },
+  "settings": {
+    "title": "Settings",
+    "cardStyle": {
+      "label": "Card Style",
+      "classic": "Classic",
+      "minimal": "Minimal"
+    },
+    "language": {
+      "label": "Language"
+    }
+  },
   "game": {
     "turnIndicator": "{{name}}'s turn",
     "phase": {
@@ -42,7 +53,8 @@
       "layOff": "Lay Off",
       "stageCombination": "Stage",
       "confirmMeld": "Confirm Meld",
-      "cancelMeld": "Cancel Meld"
+      "cancelMeld": "Cancel Meld",
+      "sortHand": "Sort"
     },
     "stagedPoints": "{{points}} pts staged",
     "handOff": {
@@ -68,6 +80,11 @@
       "pending": "—",
       "close": "Close",
       "leader": "Leading"
+    },
+    "jokerPlacement": {
+      "title": "Where should the Joker go?",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
     },
     "deckCount": "{{count}} decks",
     "errors": {

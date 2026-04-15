@@ -6,15 +6,16 @@ import { colors, radii, spacing, typography } from '../../theme/tokens';
 interface LanguageSelectorProps {
   value: 'en' | 'ar';
   onChange(locale: 'en' | 'ar'): void;
+  showLabel?: boolean;
   testID?: string;
 }
 
-export function LanguageSelector({ value, onChange, testID }: LanguageSelectorProps) {
+export function LanguageSelector({ value, onChange, showLabel = true, testID }: LanguageSelectorProps) {
   const { t } = useTranslation();
 
   return (
     <View style={styles.container} testID={testID}>
-      <Text style={styles.label}>{t('setup.language')}</Text>
+      {showLabel && <Text style={styles.label}>{t('setup.language')}</Text>}
       <View style={styles.options}>
         {(['en', 'ar'] as const).map(locale => {
           const isSelected = locale === value;

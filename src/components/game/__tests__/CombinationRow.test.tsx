@@ -29,21 +29,22 @@ const combo: Combination = {
 
 describe('CombinationRow', () => {
   it('renders all cards and owner name', () => {
-    const { getByText } = render(
+    const { getByText, getAllByText } = render(
       <CombinationRow combination={combo} ownerName="Alice" />
     );
     expect(getByText('Alice')).toBeTruthy();
-    expect(getByText('7')).toBeTruthy();
-    expect(getByText('8')).toBeTruthy();
-    expect(getByText('9')).toBeTruthy();
+    // CardTile renders rank in two corners, so multiple elements expected
+    expect(getAllByText('7').length).toBeGreaterThan(0);
+    expect(getAllByText('8').length).toBeGreaterThan(0);
+    expect(getAllByText('9').length).toBeGreaterThan(0);
   });
 
   it('calls onPress when tapped with canLayOff (onPress defined)', () => {
     const onPress = jest.fn();
-    const { getByText } = render(
+    const { getByTestId } = render(
       <CombinationRow combination={combo} ownerName="Alice" onPress={onPress} />
     );
-    fireEvent.press(getByText('7'));
+    fireEvent.press(getByTestId('combination-row-c1'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 

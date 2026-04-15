@@ -208,9 +208,8 @@ const styles = StyleSheet.create({
     color: colors.accent,
   },
   leaderBadge: {
-    ...typography.caption,
+    ...typography.tiny,
     color: colors.accent,
-    fontSize: 9,
   },
   closeButton: {
     backgroundColor: colors.border,

@@ -7,9 +7,10 @@ const queenOfDiamonds: Card = { rank: Rank.QUEEN, suit: Suit.DIAMONDS, isJoker: 
 
 describe('DiscardPile', () => {
   it('renders the top card face-up when provided', () => {
-    const { getByText } = render(<DiscardPile topCard={queenOfDiamonds} />);
-    expect(getByText('Q')).toBeTruthy();
-    expect(getByText('♦')).toBeTruthy();
+    const { getAllByText } = render(<DiscardPile topCard={queenOfDiamonds} />);
+    // CardTile renders rank+suit in two corners, so multiple elements expected
+    expect(getAllByText('Q').length).toBeGreaterThan(0);
+    expect(getAllByText('♦').length).toBeGreaterThan(0);
   });
 
   it('renders empty placeholder when topCard is null', () => {
@@ -20,8 +21,8 @@ describe('DiscardPile', () => {
 
   it('calls onPress when pressed and onPress is defined', () => {
     const onPress = jest.fn();
-    const { getByText } = render(<DiscardPile topCard={queenOfDiamonds} onPress={onPress} />);
-    fireEvent.press(getByText('Q'));
+    const { getAllByText } = render(<DiscardPile topCard={queenOfDiamonds} onPress={onPress} />);
+    fireEvent.press(getAllByText('Q')[0]);
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 

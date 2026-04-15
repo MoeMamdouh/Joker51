@@ -27,6 +27,17 @@
     "nameRequired": "لازم تكتب اسمك",
     "nameTooLong": "الاسم ميعداش 20 حرف"
   },
+  "settings": {
+    "title": "الإعدادات",
+    "cardStyle": {
+      "label": "شكل الأوراق",
+      "classic": "كلاسيك",
+      "minimal": "بسيط"
+    },
+    "language": {
+      "label": "اللغة"
+    }
+  },
   "game": {
     "turnIndicator": "دور {{name}}",
     "phase": {
@@ -42,7 +53,8 @@
       "layOff": "كمل",
       "stageCombination": "جمع",
       "confirmMeld": "انزل",
-      "cancelMeld": "كنسل"
+      "cancelMeld": "كنسل",
+      "sortHand": "رتب"
     },
     "stagedPoints": "{{points}} نقطة اتجمعت",
     "handOff": {
@@ -68,6 +80,11 @@
       "pending": "—",
       "close": "اقفل",
       "leader": "في الأول"
+    },
+    "jokerPlacement": {
+      "title": "الجوكر يروح فين؟",
+      "confirm": "تمام",
+      "cancel": "كنسل"
     },
     "deckCount": "{{count}} ورقات",
     "errors": {

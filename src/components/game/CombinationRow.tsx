@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   cardsRow: {
     flexDirection: 'row',
-    gap: 2,
+    gap: spacing.xxs,
   },
   cardWrapper: {
     position: 'relative',
@@ -68,8 +68,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   claimText: {
-    fontSize: 10,
-    color: colors.surface,
+    ...typography.tiny,
     fontWeight: '700',
+    lineHeight: 12,
+    color: colors.surface,
   },
 });

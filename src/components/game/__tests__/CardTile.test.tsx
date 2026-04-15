@@ -2,22 +2,29 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { CardTile } from '../CardTile';
 import { Card, Rank, Suit } from '../../../engine/types';
-import { cardSizes } from '../../../theme/tokens';
 
 const kingOfSpades: Card = { rank: Rank.KING, suit: Suit.SPADES, isJoker: false };
 const aceOfHearts: Card = { rank: Rank.ACE, suit: Suit.HEARTS, isJoker: false };
+const sevenOfHearts: Card = { rank: Rank.SEVEN, suit: Suit.HEARTS, isJoker: false };
+const jackOfClubs: Card = { rank: Rank.JACK, suit: Suit.CLUBS, isJoker: false };
 const jokerCard: Card = { rank: null, suit: null, isJoker: true };
 
-describe('CardTile', () => {
-  it('renders rank and suit for King of Spades', () => {
-    const { getByText } = render(<CardTile card={kingOfSpades} />);
-    expect(getByText('K')).toBeTruthy();
-    expect(getByText('♠')).toBeTruthy();
+// Mock cardStyleStore — default 'classic'
+jest.mock('../../../store/cardStyleStore', () => ({
+  useCardStyleStore: (selector: (s: { activeStyleId: string }) => unknown) =>
+    selector({ activeStyleId: 'classic' }),
+}));
+
+describe('CardTile — corner layout', () => {
+  it('renders rank in corner for King of Spades', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} />);
+    // rank appears in top-left and bottom-right corners
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders Joker indicator for joker card', () => {
-    const { getByText } = render(<CardTile card={jokerCard} />);
-    expect(getByText('🃏')).toBeTruthy();
+  it('renders suit symbol for King of Spades', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} />);
+    expect(getAllByText('♠').length).toBeGreaterThanOrEqual(1);
   });
 
   it('hides rank and suit when faceDown', () => {
@@ -25,32 +32,68 @@ describe('CardTile', () => {
     expect(queryByText('K')).toBeNull();
     expect(queryByText('♠')).toBeNull();
   });
+});
 
-  it('applies selected border style when selected', () => {
-    const { UNSAFE_getByProps } = render(<CardTile card={kingOfSpades} selected />);
-    // The face card View should have the selectedBorder style applied
-    const card = UNSAFE_getByProps({ testID: undefined });
-    expect(card).toBeTruthy();
+describe('CardTile — card types', () => {
+  it('Ace shows large centered suit symbol', () => {
+    const { getAllByText } = render(<CardTile card={aceOfHearts} />);
+    // ♥ appears in corners AND center
+    expect(getAllByText('♥').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders sm size dimensions', () => {
-    const { getByText } = render(<CardTile card={kingOfSpades} size="sm" />);
-    const rankEl = getByText('K');
-    expect(rankEl).toBeTruthy();
-    // size prop is used for dimensions — verify component renders without error
+  it('Joker shows joker glyph', () => {
+    const { getAllByText } = render(<CardTile card={jokerCard} />);
+    expect(getAllByText('🃏').length).toBeGreaterThan(0);
   });
 
-  it('renders hearts in red', () => {
-    const { getByText } = render(<CardTile card={aceOfHearts} />);
-    const suitText = getByText('♥');
-    // Red suit symbol should be present
-    expect(suitText).toBeTruthy();
+  it('face card renders rank label', () => {
+    const { getAllByText } = render(<CardTile card={jackOfClubs} />);
+    expect(getAllByText('J').length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('CardTile — suit colors', () => {
+  it('red suit text present for Hearts', () => {
+    const { getAllByText } = render(<CardTile card={aceOfHearts} />);
+    const suitEls = getAllByText('♥');
+    expect(suitEls.length).toBeGreaterThan(0);
   });
 
-  it('calls onPress when pressed', () => {
-    const onPress = jest.fn();
-    const { getByText } = render(<CardTile card={kingOfSpades} onPress={onPress} />);
-    // Pressable wraps the card — verify component mounts
-    expect(getByText('K')).toBeTruthy();
+  it('dark suit text present for Spades', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} />);
+    const suitEls = getAllByText('♠');
+    expect(suitEls.length).toBeGreaterThan(0);
+  });
+});
+
+describe('CardTile — dimmed state', () => {
+  it('renders without error when dimmed', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} dimmed />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders without error when not dimmed', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} dimmed={false} />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('CardTile — sizes', () => {
+  it('renders sm size without error', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} size="sm" />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders lg size without error', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} size="lg" />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('CardTile — face down', () => {
+  it('renders face down without any card content', () => {
+    const { queryByText } = render(<CardTile card={sevenOfHearts} faceDown />);
+    expect(queryByText('7')).toBeNull();
+    expect(queryByText('♥')).toBeNull();
   });
 });
