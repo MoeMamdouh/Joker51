@@ -108,7 +108,7 @@ describe('isCustomOrder', () => {
 });
 
 describe('drag-persist contract', () => {
-  it('after drag, single draw appends to end (not sorted position)', () => {
+  it('after drag, single draw prepends to index 0 (always visible)', () => {
     const { result, rerender } = renderHook(
       ({ cards }: { cards: Card[] }) => useHandOrder(cards),
       { initialProps: { cards: [aSpades, kHearts] } }
@@ -119,7 +119,7 @@ describe('drag-persist contract', () => {
     // Draw one card
     rerender({ cards: [aSpades, kHearts, twoSpades] });
     const order = result.current.orderedCards;
-    expect(order[2]).toBe(twoSpades); // appended at end
+    expect(order[0]).toBe(twoSpades); // prepended at start
   });
 
   it('after drag + sortBySuit, re-sorts full hand', () => {
@@ -184,6 +184,30 @@ describe('newCard', () => {
     expect(result.current.newCard).toBe(kHearts);
     act(() => { result.current.clearNewCard(); });
     expect(result.current.newCard).toBeNull();
+  });
+
+  it('new card lands at index 0 regardless of sort mode', () => {
+    const { result, rerender } = renderHook(
+      ({ cards }: { cards: Card[] }) => useHandOrder(cards),
+      { initialProps: { cards: [aSpades, kHearts] } }
+    );
+    rerender({ cards: [aSpades, kHearts, twoSpades] });
+    expect(result.current.orderedCards[0]).toBe(twoSpades);
+  });
+
+  it('sortNewCard() moves new card to its sorted position and clears newCard', () => {
+    const { result, rerender } = renderHook(
+      ({ cards }: { cards: Card[] }) => useHandOrder(cards),
+      { initialProps: { cards: [aSpades, kHearts] } }
+    );
+    rerender({ cards: [aSpades, kHearts, twoSpades] });
+    expect(result.current.orderedCards[0]).toBe(twoSpades);
+    act(() => { result.current.sortNewCard(); });
+    expect(result.current.newCard).toBeNull();
+    // bySuit: ♠ group (aSpades, twoSpades) before ♥ group (kHearts)
+    expect(result.current.orderedCards[0]).toBe(aSpades);
+    expect(result.current.orderedCards[1]).toBe(twoSpades);
+    expect(result.current.orderedCards[2]).toBe(kHearts);
   });
 
   it('cleared by sortBySuit()', () => {

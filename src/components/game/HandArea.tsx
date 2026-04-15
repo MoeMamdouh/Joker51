@@ -192,6 +192,13 @@ export function HandArea({ cards, playerId, selectedCards, stagedCards, onCardPr
   // New card indicator auto-dismiss timer
   const newCardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Scroll to start so the new card (prepended at index 0) is immediately visible
+  useEffect(() => {
+    if (newCard !== null) {
+      scrollViewRef.current?.scrollTo({ x: 0, animated: true });
+    }
+  }, [newCard]);
+
   // Auto-dismiss new card indicator after NEW_CARD_INDICATOR_TIMEOUT_MS
   useEffect(() => {
     if (newCardTimerRef.current) {

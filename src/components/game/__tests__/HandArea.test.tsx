@@ -31,7 +31,7 @@ describe('HandArea', () => {
     const { getAllByTestId } = render(
       <HandArea cards={fiveCards} selectedCards={[]} onCardPress={jest.fn()} />
     );
-    expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+    expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
   });
 
   it('calls onCardPress when a card is tapped', () => {
@@ -54,7 +54,7 @@ describe('HandArea', () => {
     const { getAllByTestId } = render(
       <HandArea cards={fiveCards} selectedCards={[card1, card3]} onCardPress={jest.fn()} />
     );
-    expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+    expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
   });
 
   it('renders cards in original LTR order when isRTL is false', () => {
@@ -85,7 +85,7 @@ describe('HandArea', () => {
       const { getAllByTestId } = render(
         <HandArea cards={fiveCards} selectedCards={[]} onCardPress={jest.fn()} />
       );
-      expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+      expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
     });
 
     it('dimming logic is unchanged in RTL mode', () => {
@@ -98,7 +98,7 @@ describe('HandArea', () => {
           onCardPress={jest.fn()}
         />
       );
-      expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+      expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
     });
   });
 
@@ -183,14 +183,14 @@ describe('HandArea', () => {
       const { getAllByTestId } = render(
         <HandArea cards={fiveCards} selectedCards={[]} onCardPress={jest.fn()} />
       );
-      expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+      expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
     });
 
     it('renders all cards normally when stagedCards is empty', () => {
       const { getAllByTestId } = render(
         <HandArea cards={fiveCards} selectedCards={[]} stagedCards={[]} onCardPress={jest.fn()} />
       );
-      expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+      expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
     });
 
     it('renders all 5 cards when staged cards are provided', () => {
@@ -202,7 +202,7 @@ describe('HandArea', () => {
           onCardPress={jest.fn()}
         />
       );
-      expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+      expect(getAllByTestId(/^hand-card-\d+$/).length).toBe(5);
     });
   });
 });

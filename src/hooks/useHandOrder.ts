@@ -69,6 +69,8 @@ export function useHandOrder(cards: Card[], playerId?: string): {
   sortBySuit: () => void;
   sortByRank: () => void;
   clearNewCard: () => void;
+  /** Move the new card from position 0 to its natural sorted position. */
+  sortNewCard: () => void;
 } {
   const [orderedCards, setOrderedCards] = useState<Card[]>(() => sortCards(cards, 'bySuit'));
   const [sortMode, setSortMode] = useState<SortMode>('bySuit');
@@ -140,14 +142,11 @@ export function useHandOrder(cards: Card[], playerId?: string): {
     } else if (added.length === 1) {
       const drawn = added[0];
       setNewCard(drawn);
+      // Always prepend at index 0 so the new card is immediately visible
+      // (regardless of sort mode or custom order).
       setOrderedCards(prevOrdered => {
         const kept = prevOrdered.filter(c => cards.includes(c));
-        if (!isCustomOrderRef.current) {
-          // Insert at correct sorted position
-          return sortCards([...kept, drawn], sortModeRef.current);
-        }
-        // Custom order: append at end
-        return [...kept, drawn];
+        return [drawn, ...kept];
       });
     } else {
       // Card(s) removed (played/discarded): preserve relative order
@@ -187,5 +186,12 @@ export function useHandOrder(cards: Card[], playerId?: string): {
     setNewCard(null);
   }
 
-  return { orderedCards, sortMode, isCustomOrder, newCard, moveCard, sortBySuit, sortByRank, clearNewCard };
+  function sortNewCard() {
+    if (newCard === null) return;
+    setNewCard(null);
+    setIsCustomOrderSync(false);
+    setOrderedCards(prev => sortCards(prev, sortModeRef.current));
+  }
+
+  return { orderedCards, sortMode, isCustomOrder, newCard, moveCard, sortBySuit, sortByRank, clearNewCard, sortNewCard };
 }

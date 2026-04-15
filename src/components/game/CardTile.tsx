@@ -53,7 +53,7 @@ interface CardTileProps {
   size?: 'sm' | 'md' | 'lg';
   /** Override the active card style — used by CardStylePicker previews. */
   styleOverride?: CardStyleId;
-  /** Newly drawn card — shows pulsing accent border indicator */
+  /** Newly drawn card — shows a pulsing accent border overlay */
   isNew?: boolean;
   testID?: string;
 }
@@ -80,15 +80,15 @@ export function CardTile({
   const showNumberCardCenterSuit = isMinimal;
   const styleDef = { faceCardCenterBg, faceCardCenterTextColor, showNumberCardCenterSuit };
 
-  const glowPulse = useSharedValue(0);
+  const pulse = useSharedValue(0);
 
   useEffect(() => {
     if (isNew && !dimmed) {
-      glowPulse.value = withRepeat(withTiming(1, { duration: 600 }), -1, true);
+      pulse.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
     } else {
-      glowPulse.value = withTiming(0, { duration: 200 });
+      pulse.value = withTiming(0, { duration: 200 });
     }
-  }, [isNew, dimmed, glowPulse]);
+  }, [isNew, dimmed, pulse]);
 
   const liftStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: withTiming(selected ? -8 : 0, { duration: 150 }) }],
@@ -98,12 +98,10 @@ export function CardTile({
     opacity: withTiming(dimmed ? 0.35 : 1.0, { duration: 150 }),
   }));
 
-  const newGlowStyle = useAnimatedStyle(() => ({
-    shadowColor: colors.card.newIndicator,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: glowPulse.value * 0.9,
-    shadowRadius: glowPulse.value * 8,
-    elevation: glowPulse.value * 10,
+  // Absolutely-positioned border overlay: borderWidth is always 2 (never changes),
+  // only opacity pulses. No layout shift possible.
+  const newBorderOverlayStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
   }));
 
   const isRed = card.suit !== null && RED_SUITS.includes(card.suit);
@@ -214,10 +212,15 @@ export function CardTile({
   );
 
   return (
-    <Animated.View style={[liftStyle, dimStyle, newGlowStyle]} testID={testID}>
+    <Animated.View style={[liftStyle, dimStyle]} testID={testID}>
       <Pressable onPress={onPress} disabled={!onPress || dimmed}>
         {cardInner}
       </Pressable>
+      {/* Absolutely-positioned border overlay — never affects layout */}
+      <Animated.View
+        style={[styles.newBorderOverlay, { borderRadius: radii.sm }, newBorderOverlayStyle]}
+        pointerEvents="none"
+      />
     </Animated.View>
   );
 }
@@ -295,5 +298,15 @@ const styles = StyleSheet.create({
   },
   centerSm: {
     ...typography.cardCenterSm,
+  },
+  newBorderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 2,
+    borderColor: colors.card.newIndicator,
+    // borderRadius applied inline to match the card variant
   },
 });
