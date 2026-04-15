@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
+  withRepeat,
 } from 'react-native-reanimated';
 import { Card, Rank, Suit } from '../../engine/types';
 import {
@@ -51,6 +53,8 @@ interface CardTileProps {
   size?: 'sm' | 'md' | 'lg';
   /** Override the active card style — used by CardStylePicker previews. */
   styleOverride?: CardStyleId;
+  /** Newly drawn card — shows pulsing accent border indicator */
+  isNew?: boolean;
   testID?: string;
 }
 
@@ -62,6 +66,7 @@ export function CardTile({
   onPress,
   size = 'md',
   styleOverride,
+  isNew = false,
   testID,
 }: CardTileProps) {
   const dimensions = cardSizes[size];
@@ -75,12 +80,30 @@ export function CardTile({
   const showNumberCardCenterSuit = isMinimal;
   const styleDef = { faceCardCenterBg, faceCardCenterTextColor, showNumberCardCenterSuit };
 
+  const glowPulse = useSharedValue(0);
+
+  useEffect(() => {
+    if (isNew && !dimmed) {
+      glowPulse.value = withRepeat(withTiming(1, { duration: 600 }), -1, true);
+    } else {
+      glowPulse.value = withTiming(0, { duration: 200 });
+    }
+  }, [isNew, dimmed, glowPulse]);
+
   const liftStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: withTiming(selected ? -8 : 0, { duration: 150 }) }],
   }));
 
   const dimStyle = useAnimatedStyle(() => ({
     opacity: withTiming(dimmed ? 0.35 : 1.0, { duration: 150 }),
+  }));
+
+  const newGlowStyle = useAnimatedStyle(() => ({
+    shadowColor: colors.card.newIndicator,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: glowPulse.value * 0.9,
+    shadowRadius: glowPulse.value * 8,
+    elevation: glowPulse.value * 10,
   }));
 
   const isRed = card.suit !== null && RED_SUITS.includes(card.suit);
@@ -191,7 +214,7 @@ export function CardTile({
   );
 
   return (
-    <Animated.View style={[liftStyle, dimStyle]} testID={testID}>
+    <Animated.View style={[liftStyle, dimStyle, newGlowStyle]} testID={testID}>
       <Pressable onPress={onPress} disabled={!onPress || dimmed}>
         {cardInner}
       </Pressable>

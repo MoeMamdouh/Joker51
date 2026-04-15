@@ -21,6 +21,7 @@ export const colors = {
     selected: '#E8B84B',
     joker: '#8B5CF6',
     dimmed: 'rgba(0,0,0,0.45)',
+    newIndicator: '#E8B84B', // accent — pulsing glow for newly drawn card
     faceCard: {
       classicBg: '#C8972A',
       classicText: '#FFFFFF',

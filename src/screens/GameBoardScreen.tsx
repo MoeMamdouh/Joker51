@@ -388,6 +388,7 @@ export function GameBoardScreen() {
         />
         <HandArea
           cards={activeCards}
+          playerId={activePlayerId}
           selectedCards={selectedCards}
           stagedCards={stagedCombinations.flat()}
           onCardPress={toggleCard}

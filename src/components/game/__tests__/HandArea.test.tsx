@@ -73,9 +73,10 @@ describe('HandArea', () => {
     const { getByTestId } = render(
       <HandArea cards={fiveCards} selectedCards={[]} onCardPress={onCardPress} />
     );
-    // In RTL mode, cards are reversed: hand-card-0 is the last card (card5)
+    // In RTL mode, cards are reversed: bySuit order is [A♠, 5♠, 2♥, 3♣, 4♦],
+    // reversed for RTL → hand-card-0 is the last sorted card (4♦ = card4)
     fireEvent.press(getByTestId('hand-card-0'));
-    expect(onCardPress).toHaveBeenCalledWith(card5);
+    expect(onCardPress).toHaveBeenCalledWith(card4);
   });
 
   describe('RTL drag direction', () => {
@@ -98,6 +99,82 @@ describe('HandArea', () => {
         />
       );
       expect(getAllByTestId(/^hand-card-/).length).toBe(5);
+    });
+  });
+
+  describe('auto-sort on deal (US1)', () => {
+    it('renders cards in bySuit order on initial render — A♠ first', () => {
+      // fiveCards = [card1(A♠), card2(2♥), card3(3♣), card4(4♦), card5(5♠)]
+      // bySuit sort: A♠(♠,13) > 5♠(♠,4) > 2♥(♥,1) > 3♣(♣,2) > 4♦(♦,3)
+      // Sorted: [card1, card5, card2, card3, card4]
+      const onCardPress = jest.fn();
+      const { getByTestId } = render(
+        <HandArea cards={fiveCards} selectedCards={[]} onCardPress={onCardPress} />
+      );
+      // hand-card-0 should be card1 (A♠) — highest in bySuit order
+      fireEvent.press(getByTestId('hand-card-0'));
+      expect(onCardPress).toHaveBeenCalledWith(card1);
+    });
+
+    it('second card in bySuit order is the other spade (5♠)', () => {
+      const onCardPress = jest.fn();
+      const { getByTestId } = render(
+        <HandArea cards={fiveCards} selectedCards={[]} onCardPress={onCardPress} />
+      );
+      fireEvent.press(getByTestId('hand-card-1'));
+      expect(onCardPress).toHaveBeenCalledWith(card5);
+    });
+  });
+
+  describe('sort mode control (US3)', () => {
+    it('renders the segmented sort control', () => {
+      const { getByTestId } = render(
+        <HandArea cards={fiveCards} selectedCards={[]} onCardPress={jest.fn()} />
+      );
+      expect(getByTestId('sort-mode-control')).toBeTruthy();
+    });
+
+    it('sort control is present with stagedCards empty', () => {
+      const { getByTestId } = render(
+        <HandArea cards={fiveCards} selectedCards={[]} stagedCards={[]} onCardPress={jest.fn()} />
+      );
+      expect(getByTestId('sort-mode-control')).toBeTruthy();
+    });
+
+    it('sort control is present when stagedCards is non-empty (disabled but rendered)', () => {
+      const { getByTestId } = render(
+        <HandArea
+          cards={fiveCards}
+          selectedCards={[]}
+          stagedCards={[card1]}
+          onCardPress={jest.fn()}
+        />
+      );
+      expect(getByTestId('sort-mode-control')).toBeTruthy();
+    });
+
+    it('pressing byRank tab reorders cards — Aces across suits first', () => {
+      const onCardPress = jest.fn();
+      const { getByTestId } = render(
+        <HandArea cards={fiveCards} selectedCards={[]} onCardPress={onCardPress} />
+      );
+      // Press the byRank segment tab
+      fireEvent.press(getByTestId('sort-mode-control-byRank'));
+      // After byRank sort: highest rank first = card1(A♠) still first
+      fireEvent.press(getByTestId('hand-card-0'));
+      expect(onCardPress).toHaveBeenCalledWith(card1);
+    });
+
+    it('pressing bySuit tab after byRank reverts to suit order', () => {
+      const onCardPress = jest.fn();
+      const { getByTestId } = render(
+        <HandArea cards={fiveCards} selectedCards={[]} onCardPress={onCardPress} />
+      );
+      fireEvent.press(getByTestId('sort-mode-control-byRank'));
+      fireEvent.press(getByTestId('sort-mode-control-bySuit'));
+      // After reverting to bySuit: card1 (A♠) is still first
+      fireEvent.press(getByTestId('hand-card-0'));
+      expect(onCardPress).toHaveBeenCalledWith(card1);
     });
   });
 

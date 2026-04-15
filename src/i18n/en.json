@@ -54,7 +54,8 @@
       "stageCombination": "Stage",
       "confirmMeld": "Confirm Meld",
       "cancelMeld": "Cancel Meld",
-      "sortHand": "Sort"
+      "sortBySuit": "By Suit",
+      "sortByRank": "By Rank"
     },
     "stagedPoints": "{{points}} pts staged",
     "handOff": {

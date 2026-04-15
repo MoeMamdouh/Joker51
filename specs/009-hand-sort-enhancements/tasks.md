@@ -15,7 +15,7 @@
 
 **Purpose**: Remove the existing single "Sort" button infrastructure that will be replaced.
 
-- [ ] T001 Remove `game.actions.sortHand` key from `src/i18n/en.json` and `src/i18n/ar.json`; add `game.actions.sortBySuit` ("By Suit" / "بالشكل") and `game.actions.sortByRank` ("By Rank" / "بالرتبة") to both files in the same edit
+- [X] T001 Remove `game.actions.sortHand` key from `src/i18n/en.json` and `src/i18n/ar.json`; add `game.actions.sortBySuit` ("By Suit" / "بالشكل") and `game.actions.sortByRank` ("By Rank" / "بالرتبة") to both files in the same edit
 
 ---
 
@@ -25,11 +25,11 @@
 
 **⚠️ CRITICAL**: Phases 3–6 cannot begin until T002–T005 are complete.
 
-- [ ] T002 In `src/hooks/useHandOrder.ts`: add `SortMode = 'bySuit' | 'byRank'` type and `RANK_POWER` / `SUIT_POWER` constant maps (Ace=13 highest, ♠=3 ♥=2 ♣=1 ♦=0); remove the old `SUIT_ORDER` array and `cardPowerKey` helper
-- [ ] T003 In `src/hooks/useHandOrder.ts`: replace `sortByPower()` with `sortBySuit()` and add `sortByRank()`; both clear `isCustomOrder` and update `sortMode` state; `moveCard()` must set `isCustomOrder = true` on first call after a sort
-- [ ] T004 In `src/hooks/useHandOrder.ts`: update the reconcile `useEffect` — when `added.length >= 2` (batch deal / round start): reset `sortMode` to `'bySuit'`, clear `isCustomOrder`, set `newCard = null`, sort the full incoming hand by suit; when `added.length === 1`: if `!isCustomOrder` insert the new card at the correct sorted position for the active `sortMode`, else append at end; set `newCard = added[0]` in both cases
-- [ ] T005 In `src/hooks/useHandOrder.ts`: add `clearNewCard()` function that sets `newCard = null`; update the return type to export `{ orderedCards, sortMode, isCustomOrder, newCard, moveCard, sortBySuit, sortByRank, clearNewCard }`
-- [ ] T006 Update `src/hooks/__tests__/useHandOrder.test.ts`: rewrite tests for the new API — cover `sortBySuit` order (Joker → A♠ K♠ … 2♠ → A♥ … → A♣ … → A♦ … 2♦), `sortByRank` order (Joker → A♠A♥A♣A♦ → K♠K♥… → 2♦), `isCustomOrder` flag set by drag, reset by sort, batch-deal reset, single-draw `newCard` detection, round-reset (`>= 2` new cards) resets to bySuit
+- [X] T002 In `src/hooks/useHandOrder.ts`: add `SortMode = 'bySuit' | 'byRank'` type and `RANK_POWER` / `SUIT_POWER` constant maps (Ace=13 highest, ♠=3 ♥=2 ♣=1 ♦=0); remove the old `SUIT_ORDER` array and `cardPowerKey` helper
+- [X] T003 In `src/hooks/useHandOrder.ts`: replace `sortByPower()` with `sortBySuit()` and add `sortByRank()`; both clear `isCustomOrder` and update `sortMode` state; `moveCard()` must set `isCustomOrder = true` on first call after a sort
+- [X] T004 In `src/hooks/useHandOrder.ts`: update the reconcile `useEffect` — when `added.length >= 2` (batch deal / round start): reset `sortMode` to `'bySuit'`, clear `isCustomOrder`, set `newCard = null`, sort the full incoming hand by suit; when `added.length === 1`: if `!isCustomOrder` insert the new card at the correct sorted position for the active `sortMode`, else append at end; set `newCard = added[0]` in both cases
+- [X] T005 In `src/hooks/useHandOrder.ts`: add `clearNewCard()` function that sets `newCard = null`; update the return type to export `{ orderedCards, sortMode, isCustomOrder, newCard, moveCard, sortBySuit, sortByRank, clearNewCard }`
+- [X] T006 Update `src/hooks/__tests__/useHandOrder.test.ts`: rewrite tests for the new API — cover `sortBySuit` order (Joker → A♠ K♠ … 2♠ → A♥ … → A♣ … → A♦ … 2♦), `sortByRank` order (Joker → A♠A♥A♣A♦ → K♠K♥… → 2♦), `isCustomOrder` flag set by drag, reset by sort, batch-deal reset, single-draw `newCard` detection, round-reset (`>= 2` new cards) resets to bySuit
 
 **Checkpoint**: `useHandOrder` fully tested and exported — user story work can begin.
 
@@ -41,8 +41,8 @@
 
 **Independent Test**: Launch game → deal 7 cards → verify cards appear Joker-first then A→2 within ♠♥♣♦ groups without any user action.
 
-- [ ] T007 [US1] In `src/components/game/HandArea.tsx`: destructure `sortBySuit`, `sortByRank`, `sortMode` from `useHandOrder`; the hook now auto-sorts on mount/batch-deal (T004 handles it) — verify no manual `useEffect` sort call is needed in `HandArea`
-- [ ] T008 [P] [US1] Update `src/components/game/__tests__/HandArea.test.tsx`: add tests verifying that a freshly rendered `HandArea` with 5+ cards displays them in By Suit descending order (Ace before King, suit group order ♠♥♣♦)
+- [X] T007 [US1] In `src/components/game/HandArea.tsx`: destructure `sortBySuit`, `sortByRank`, `sortMode` from `useHandOrder`; the hook now auto-sorts on mount/batch-deal (T004 handles it) — verify no manual `useEffect` sort call is needed in `HandArea`
+- [X] T008 [P] [US1] Update `src/components/game/__tests__/HandArea.test.tsx`: add tests verifying that a freshly rendered `HandArea` with 5+ cards displays them in By Suit descending order (Ace before King, suit group order ♠♥♣♦)
 
 ---
 
@@ -52,10 +52,10 @@
 
 **Independent Test**: Press "Draw" → one card shows a pulsing accent border → tap it → border disappears. Draw again → wait 3 s without tapping → border disappears automatically.
 
-- [ ] T009 [US2] In `src/components/game/CardTile.tsx`: add `isNew?: boolean` prop (default `false`); add a Reanimated `useAnimatedStyle` that drives a `borderColor` or `shadowOpacity` pulse via `withRepeat(withTiming(1, {duration:600}), -1, true)` when `isNew === true && !dimmed`; add `colors.card.newIndicator` (accent colour alias) to `src/theme/tokens.ts` if not already present
-- [ ] T010 [US2] In `src/components/game/HandArea.tsx`: consume `newCard` and `clearNewCard` from `useHandOrder`; add `useEffect` that sets a 3 s `setTimeout` when `newCard` changes (non-null), clearing it on cleanup; pass `isNew={card === newCard}` to each `DraggableCard`; in `DraggableCard` forward `isNew` to `CardTile` and call `clearNewCard()` inside the existing `onPress` handler when `isNew` is true
-- [ ] T011 [US2] In `src/components/game/HandArea.tsx`: suppress `isNew` when the card is staged — pass `isNew={card === newCard && !isDimmed}` (the `isDimmed` check already computed per-card); add a `useEffect` that watches `stagedCards` and calls `clearNewCard()` if `newCard` is present in the new `stagedCards` array
-- [ ] T012 [P] [US2] Update `src/components/game/__tests__/CardTile.test.tsx`: add test that `isNew=true` renders without error; add test that `isNew=true` with `dimmed=true` does not apply the pulse class (check `testID` or snapshot); update `src/components/game/__tests__/HandArea.test.tsx` with a test that `newCard` prop is cleared after card press
+- [X] T009 [US2] In `src/components/game/CardTile.tsx`: add `isNew?: boolean` prop (default `false`); add a Reanimated `useAnimatedStyle` that drives a `borderColor` or `shadowOpacity` pulse via `withRepeat(withTiming(1, {duration:600}), -1, true)` when `isNew === true && !dimmed`; add `colors.card.newIndicator` (accent colour alias) to `src/theme/tokens.ts` if not already present
+- [X] T010 [US2] In `src/components/game/HandArea.tsx`: consume `newCard` and `clearNewCard` from `useHandOrder`; add `useEffect` that sets a 3 s `setTimeout` when `newCard` changes (non-null), clearing it on cleanup; pass `isNew={card === newCard}` to each `DraggableCard`; in `DraggableCard` forward `isNew` to `CardTile` and call `clearNewCard()` inside the existing `onPress` handler when `isNew` is true
+- [X] T011 [US2] In `src/components/game/HandArea.tsx`: suppress `isNew` when the card is staged — pass `isNew={card === newCard && !isDimmed}` (the `isDimmed` check already computed per-card); add a `useEffect` that watches `stagedCards` and calls `clearNewCard()` if `newCard` is present in the new `stagedCards` array
+- [X] T012 [P] [US2] Update `src/components/game/__tests__/CardTile.test.tsx`: add test that `isNew=true` renders without error; add test that `isNew=true` with `dimmed=true` does not apply the pulse class (check `testID` or snapshot); update `src/components/game/__tests__/HandArea.test.tsx` with a test that `newCard` prop is cleared after card press
 
 ---
 
@@ -65,9 +65,9 @@
 
 **Independent Test**: Render `HandArea` with mixed cards → press "By Rank" tab → cards group by rank → press "By Suit" tab → cards revert to suit groups → stage a card → both tabs are non-interactive.
 
-- [ ] T013 [US3] Create `src/components/ui/SegmentedControl.tsx`: props `{ options: Array<{label:string; value:string}>, value:string, onChange:(v:string)=>void, disabled?:boolean, testID?:string }`; active tab: `colors.accent` fill + white text; inactive tab: `colors.surface` fill + `colors.text.secondary` text; disabled: full control at `opacity: 0.4` with `pointerEvents='none'`; all sizing from tokens (`spacing`, `radii`, `typography.caption`)
-- [ ] T014 [US3] In `src/components/game/HandArea.tsx`: replace the existing `<Pressable>` "Sort ↕" toolbar with `<SegmentedControl>` using `options={[{label:t('game.actions.sortBySuit'), value:'bySuit'}, {label:t('game.actions.sortByRank'), value:'byRank'}]}`, `value={sortMode}`, `onChange={(v)=> v==='bySuit' ? sortBySuit() : sortByRank()}`, `disabled={isDragging || (stagedCards?.length ?? 0) > 0}` (disabled during active drag per FR-005 and during staging per FR-005), `testID="sort-mode-control"`; remove old `sortButton`, `sortButtonText`, `sortIcon` styles; remove the `sortByPower` import
-- [ ] T015 [P] [US3] Update `src/components/game/__tests__/HandArea.test.tsx`: add tests for segmented control presence (`getByTestId('sort-mode-control')`), that pressing "By Rank" calls `sortByRank` equivalent (mock `useHandOrder`), and that the control has `disabled` state when `stagedCards` is non-empty
+- [X] T013 [US3] Create `src/components/ui/SegmentedControl.tsx`: props `{ options: Array<{label:string; value:string}>, value:string, onChange:(v:string)=>void, disabled?:boolean, testID?:string }`; active tab: `colors.accent` fill + white text; inactive tab: `colors.surface` fill + `colors.text.secondary` text; disabled: full control at `opacity: 0.4` with `pointerEvents='none'`; all sizing from tokens (`spacing`, `radii`, `typography.caption`)
+- [X] T014 [US3] In `src/components/game/HandArea.tsx`: replace the existing `<Pressable>` "Sort ↕" toolbar with `<SegmentedControl>` using `options={[{label:t('game.actions.sortBySuit'), value:'bySuit'}, {label:t('game.actions.sortByRank'), value:'byRank'}]}`, `value={sortMode}`, `onChange={(v)=> v==='bySuit' ? sortBySuit() : sortByRank()}`, `disabled={isDragging || (stagedCards?.length ?? 0) > 0}` (disabled during active drag per FR-005 and during staging per FR-005), `testID="sort-mode-control"`; remove old `sortButton`, `sortButtonText`, `sortIcon` styles; remove the `sortByPower` import
+- [X] T015 [P] [US3] Update `src/components/game/__tests__/HandArea.test.tsx`: add tests for segmented control presence (`getByTestId('sort-mode-control')`), that pressing "By Rank" calls `sortByRank` equivalent (mock `useHandOrder`), and that the control has `disabled` state when `stagedCards` is non-empty
 
 ---
 
@@ -79,7 +79,7 @@
 
 *Note: The drag-persist implementation itself is covered by T003 (useHandOrder). This phase adds the explicit test coverage.*
 
-- [ ] T016 [P] [US4] Add tests to `src/hooks/__tests__/useHandOrder.test.ts` for the drag-persist contract: drag → draw → verify order preserved (new card at end); drag → sortBySuit → verify full re-sort (isCustomOrder cleared); drag → sortByRank → verify full re-sort
+- [X] T016 [P] [US4] Add tests to `src/hooks/__tests__/useHandOrder.test.ts` for the drag-persist contract: drag → draw → verify order preserved (new card at end); drag → sortBySuit → verify full re-sort (isCustomOrder cleared); drag → sortByRank → verify full re-sort
 
 ---
 
@@ -87,10 +87,10 @@
 
 **Purpose**: Verification pass, RTL correctness, token audit, remove dead code.
 
-- [ ] T017 In `src/components/game/HandArea.tsx`: verify RTL toolbar alignment — `SegmentedControl` must sit at `flex-start` when `isRTL=true` (same as old `toolbarRTL` style); confirm card display order reversal still works with the new sort modes
-- [ ] T018 [P] Token audit — confirm `src/components/ui/SegmentedControl.tsx` and all `HandArea` style changes reference only tokens from `src/theme/tokens.ts`; no raw hex, dp, or font-size values
-- [ ] T019 [P] Run full test suite (`npm test`); fix any snapshot or unit regressions; TypeScript strict-mode check (`npx tsc --noEmit`); confirm 0 errors
-- [ ] T020 [P] Remove dead code: delete the old `sortIcon`, `sortButton`, `sortButtonText` style entries from `HandArea.tsx` (replaced by `SegmentedControl`); confirm `sortByPower` is fully removed from `useHandOrder.ts` and all callers
+- [X] T017 In `src/components/game/HandArea.tsx`: verify RTL toolbar alignment — `SegmentedControl` must sit at `flex-start` when `isRTL=true` (same as old `toolbarRTL` style); confirm card display order reversal still works with the new sort modes
+- [X] T018 [P] Token audit — confirm `src/components/ui/SegmentedControl.tsx` and all `HandArea` style changes reference only tokens from `src/theme/tokens.ts`; no raw hex, dp, or font-size values
+- [X] T019 [P] Run full test suite (`npm test`); fix any snapshot or unit regressions; TypeScript strict-mode check (`npx tsc --noEmit`); confirm 0 errors
+- [X] T020 [P] Remove dead code: delete the old `sortIcon`, `sortButton`, `sortButtonText` style entries from `HandArea.tsx` (replaced by `SegmentedControl`); confirm `sortByPower` is fully removed from `useHandOrder.ts` and all callers
 
 ---
 

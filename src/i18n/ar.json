@@ -54,7 +54,8 @@
       "stageCombination": "جمع",
       "confirmMeld": "انزل",
       "cancelMeld": "كنسل",
-      "sortHand": "رتب"
+      "sortBySuit": "بالشكل",
+      "sortByRank": "بالرتبة"
     },
     "stagedPoints": "{{points}} نقطة اتجمعت",
     "handOff": {
