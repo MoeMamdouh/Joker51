@@ -8,6 +8,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { initI18n } from '../src/i18n';
 import { DirectionProvider } from '../src/contexts/DirectionContext';
 import { useLanguageStore } from '../src/store/languageStore';
+import { useCardStyleStore } from '../src/store/cardStyleStore';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -20,6 +21,7 @@ export default function RootLayout() {
   useEffect(() => {
     initI18n().then(savedLocale => {
       useLanguageStore.setState({ locale: savedLocale, isRTL: savedLocale === 'ar' });
+      useCardStyleStore.getState().loadPersistedStyle();
       setI18nReady(true);
     });
   }, []);
@@ -32,6 +34,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="game" />
+          <Stack.Screen name="settings" />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

@@ -29,10 +29,11 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
-      style={[
+      style={({ pressed }) => [
         styles.base,
         isPrimary ? styles.primary : styles.secondary,
         disabled && styles.disabled,
+        pressed && styles.pressed,
         style,
       ]}
     >
@@ -61,6 +62,9 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.4,
+  },
+  pressed: {
+    opacity: 0.75,
   },
   label: {
     ...typography.label,

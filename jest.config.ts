@@ -17,6 +17,7 @@ const config: Config = {
     {
       displayName: 'components',
       preset: 'jest-expo',
+      setupFilesAfterEnv: ['react-native-gesture-handler/jestSetup'],
       testMatch: [
         '<rootDir>/src/components/**/__tests__/**/*.test.tsx',
         '<rootDir>/src/components/**/__tests__/**/*.test.ts',
@@ -33,6 +34,9 @@ const config: Config = {
         // from firing when isInsideTestCode === false
         '^expo/src/winter$': '<rootDir>/__mocks__/expo-winter.js',
         '^expo/src/winter/ImportMetaRegistry$': '<rootDir>/__mocks__/expo-winter-import-meta.js',
+        // AsyncStorage: use the official Jest mock to avoid NativeModule null errors
+        '^@react-native-async-storage/async-storage$':
+          '@react-native-async-storage/async-storage/jest/async-storage-mock',
       },
       transformIgnorePatterns: [
         'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',

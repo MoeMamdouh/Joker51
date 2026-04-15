@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useSetupStore, deckCountForPlayers } from '../store/setupStore';
 import { useLanguageStore } from '../store/languageStore';
+import { useGameStore } from '../store/gameStore';
 import { useDirection } from '../contexts/DirectionContext';
 import { useSavedSession } from '../hooks/useSavedSession';
 import { SafeScrollView } from '../components/layout/SafeScrollView';
@@ -14,7 +15,7 @@ import { DeckCountNotice } from '../components/setup/DeckCountNotice';
 import { RoundFormatSelector } from '../components/setup/RoundFormatSelector';
 import { LanguageSelector } from '../components/setup/LanguageSelector';
 import { Button } from '../components/ui/Button';
-import { colors, spacing, typography } from '../theme/tokens';
+import { colors, spacing, typography, radii } from '../theme/tokens';
 
 export function SetupScreen() {
   const { t } = useTranslation();
@@ -36,6 +37,9 @@ export function SetupScreen() {
   const startGame = useSetupStore(s => s.startGame);
 
   function handleResume() {
+    if (session) {
+      useGameStore.getState().setGame(session);
+    }
     router.replace('/game');
   }
 
@@ -67,9 +71,18 @@ export function SetupScreen() {
         />
       )}
       <SafeScrollView testID="setup-screen">
-        <Text style={[styles.title, isRTL && styles.titleRTL]} testID="setup-title">
-          {t('setup.title')}
-        </Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, isRTL && styles.titleRTL]} testID="setup-title">
+            {t('setup.title')}
+          </Text>
+          <Pressable
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+            testID="btn-settings"
+          >
+            <Text style={styles.settingsButtonText}>{t('settings.title')}</Text>
+          </Pressable>
+        </View>
 
         <LanguageSelector
           value={locale}
@@ -125,15 +138,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
   title: {
     ...typography.heading,
     color: colors.text.primary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  titleRTL: {
+    flex: 1,
     textAlign: 'center',
   },
+  settingsButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  settingsButtonText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  titleRTL: {},
   startButtonContainer: {
     marginTop: spacing.lg,
   },

@@ -16,6 +16,8 @@ import { ActionBar } from '../components/game/ActionBar';
 import { StagedMeldPreview } from '../components/game/StagedMeldPreview';
 import { RoundSummaryOverlay } from '../components/game/RoundSummaryOverlay';
 import { ScoreboardModal } from '../components/game/ScoreboardModal';
+import { JokerPlacementSheet, JokerSequenceOption } from '../components/game/JokerPlacementSheet';
+import { computeJokerSequenceOptions } from '../components/game/jokerPlacement';
 import { colors, spacing, typography, radii } from '../theme/tokens';
 import { Card, Combination, GameStatus, TurnPhase } from '../engine/types';
 import { validateCombination, calculateMeldPoints, getClaimableJokerCards } from '../engine';
@@ -44,6 +46,8 @@ export function GameBoardScreen() {
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [stagedCombinations, setStagedCombinations] = useState<Card[][]>([]);
+  const [jokerOptions, setJokerOptions] = useState<JokerSequenceOption[]>([]);
+  const [pendingJokerCards, setPendingJokerCards] = useState<Card[] | null>(null);
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function showError(msg: string) {
@@ -149,12 +153,59 @@ export function GameBoardScreen() {
 
   function handleStageCombination() {
     if (selectedCards.length === 0) return;
+
+    // Detect Joker in a sequence context with potentially ambiguous placement
+    const hasJoker = selectedCards.some(c => c.isJoker);
+    if (hasJoker) {
+      const options = computeJokerSequenceOptions(selectedCards);
+      if (options.length > 1) {
+        // Show picker — defer staging until user chooses position
+        setPendingJokerCards([...selectedCards]);
+        setJokerOptions(options);
+        clearSelection();
+        return;
+      }
+      if (options.length === 1) {
+        // Only one valid position — use it directly, no picker needed
+        const resolvedCards = options[0].cards;
+        const vr = validateCombination(resolvedCards, { isInitialMeld: !hasMelded });
+        if (!vr.valid) {
+          showError(t(`game.errors.${vr.error ? (ERROR_UI_MAP[vr.error] ?? vr.error) : 'invalidCombination'}`));
+          return;
+        }
+        setStagedCombinations(prev => [...prev, resolvedCards]);
+        clearSelection();
+        return;
+      }
+    }
+
     const vr = validateCombination(selectedCards, { isInitialMeld: !hasMelded });
     if (!vr.valid) {
       showError(t(`game.errors.${vr.error ? (ERROR_UI_MAP[vr.error] ?? vr.error) : 'invalidCombination'}`));
       return;
     }
     setStagedCombinations(prev => [...prev, [...selectedCards]]);
+    clearSelection();
+  }
+
+  function handleJokerPlacementConfirm(option: JokerSequenceOption) {
+    const vr = validateCombination(option.cards, { isInitialMeld: !hasMelded });
+    if (!vr.valid) {
+      showError(t(`game.errors.${vr.error ? (ERROR_UI_MAP[vr.error] ?? vr.error) : 'invalidCombination'}`));
+      setJokerOptions([]);
+      setPendingJokerCards(null);
+      return;
+    }
+    setStagedCombinations(prev => [...prev, option.cards]);
+    setJokerOptions([]);
+    setPendingJokerCards(null);
+  }
+
+  function handleJokerPlacementDismiss() {
+    setJokerOptions([]);
+    setPendingJokerCards(null);
+    // Return staged cards back to hand (clear staged combinations too)
+    setStagedCombinations([]);
     clearSelection();
   }
 
@@ -245,13 +296,22 @@ export function GameBoardScreen() {
           roundResults={roundResults}
           activePlayerId={activePlayerId}
         />
-        <Pressable
-          style={styles.scoreboardButton}
-          onPress={() => setShowScoreboard(true)}
-          testID="btn-scoreboard"
-        >
-          <Text style={styles.scoreboardButtonText}>{t('game.scoreboard.title')}</Text>
-        </Pressable>
+        <View style={styles.headerButtons}>
+          <Pressable
+            style={styles.scoreboardButton}
+            onPress={() => setShowScoreboard(true)}
+            testID="btn-scoreboard"
+          >
+            <Text style={styles.scoreboardButtonText}>{t('game.scoreboard.title')}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.scoreboardButton}
+            onPress={() => router.push('/settings')}
+            testID="btn-settings"
+          >
+            <Text style={styles.scoreboardButtonText}>{t('settings.title')}</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Opponent badges */}
@@ -329,6 +389,7 @@ export function GameBoardScreen() {
         <HandArea
           cards={activeCards}
           selectedCards={selectedCards}
+          stagedCards={stagedCombinations.flat()}
           onCardPress={toggleCard}
         />
       </View>
@@ -347,6 +408,13 @@ export function GameBoardScreen() {
         players={playerList}
         roundResults={roundResults}
         onClose={() => setShowScoreboard(false)}
+      />
+
+      <JokerPlacementSheet
+        visible={jokerOptions.length > 0}
+        options={jokerOptions}
+        onConfirm={handleJokerPlacementConfirm}
+        onDismiss={handleJokerPlacementDismiss}
       />
 
       {showRoundSummary && (
@@ -403,6 +471,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingRight: spacing.sm,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
   scoreboardButton: {
     backgroundColor: colors.surface,

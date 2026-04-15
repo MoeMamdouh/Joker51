@@ -3,7 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { RoundSummaryOverlay } from '../RoundSummaryOverlay';
 
 jest.mock('../../../store/languageStore', () => ({
-  useLanguageStore: (selector) => selector({ locale: 'en' }),
+  useLanguageStore: (selector: (s: { locale: string }) => unknown) => selector({ locale: 'en' }),
 }));
 
 jest.mock('react-i18next', () => ({

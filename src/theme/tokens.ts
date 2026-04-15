@@ -1,7 +1,7 @@
 /**
- * Design tokens — Phase 2 (Game Setup Screen) + Phase 3 (Game Board Screen).
- * Phase 7 (Design System) will expand this with a full token set.
- * All components MUST reference these tokens — no raw style values anywhere.
+ * Design tokens — single source of truth for all visual values.
+ * No raw colors, spacing, or typography values anywhere except here.
+ * Phase 7 (Design System) full expansion.
  */
 
 export const colors = {
@@ -20,14 +20,23 @@ export const colors = {
     back: '#1E3A5F',
     selected: '#E8B84B',
     joker: '#8B5CF6',
+    dimmed: 'rgba(0,0,0,0.45)',
+    faceCard: {
+      classicBg: '#C8972A',
+      classicText: '#FFFFFF',
+    },
   },
   suit: {
     red: '#E74C3C',
-    black: '#1A2632',
+    black: '#2C3E50',
+  },
+  overlay: {
+    backdrop: 'rgba(0,0,0,0.55)',
   },
 } as const;
 
 export const spacing = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 16,
@@ -62,6 +71,26 @@ export const typography = {
     fontWeight: '400' as const,
     lineHeight: 16,
   },
+  cardCorner: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    lineHeight: 13,
+  },
+  cardCenter: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    lineHeight: 26,
+  },
+  cardCenterSm: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    lineHeight: 17,
+  },
+  tiny: {
+    fontSize: 9,
+    fontWeight: '400' as const,
+    lineHeight: 12,
+  },
 } as const;
 
 export const cardSizes = {
@@ -72,14 +101,31 @@ export const cardSizes = {
 
 export const shadows = {
   card: {
-    elevation: {
-      // Android
-      elevation: 6,
-      // iOS
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-    },
+    elevation: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
+  cardLifted: {
+    elevation: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+  },
+  bottomSheet: {
+    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+} as const;
+
+export const zIndex = {
+  card: 1,
+  cardDragging: 100,
+  overlay: 200,
+  modal: 300,
 } as const;

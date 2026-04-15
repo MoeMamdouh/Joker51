@@ -36,7 +36,7 @@ describe('TableArea', () => {
 
   it('calls onCombinationPress when canLayOff is true', () => {
     const onPress = jest.fn();
-    const { getByText } = render(
+    const { getByTestId } = render(
       <TableArea
         combinations={combinations}
         players={players}
@@ -44,13 +44,13 @@ describe('TableArea', () => {
         onCombinationPress={onPress}
       />
     );
-    fireEvent.press(getByText('10'));
+    fireEvent.press(getByTestId('combination-row-c1'));
     expect(onPress).toHaveBeenCalledWith('c1');
   });
 
   it('does not call onCombinationPress when canLayOff is false', () => {
     const onPress = jest.fn();
-    const { getByText } = render(
+    const { getByTestId } = render(
       <TableArea
         combinations={combinations}
         players={players}
@@ -59,7 +59,7 @@ describe('TableArea', () => {
       />
     );
     // Pressing should not trigger since canLayOff=false means no onPress prop
-    fireEvent.press(getByText('10'));
+    fireEvent.press(getByTestId('combination-row-c1'));
     expect(onPress).not.toHaveBeenCalled();
   });
 
