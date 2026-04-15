@@ -83,6 +83,7 @@ When a player drags a card to a new position, that custom order is maintained fo
 - What happens when two cards share the exact same rank and suit (two decks in play)? → Both shown; stable sort (order between duplicates is not guaranteed but no crash).
 - What happens when the hand has only one card? → Displayed normally, sort buttons still work but produce the same single-card view.
 - What happens when the player is in the middle of staging a meld while a sort is triggered? → Sort is disabled while any cards are staged (sort buttons are greyed out / non-interactive).
+- What happens if a newly drawn card still has the "new" indicator when the player stages it? → The indicator is suppressed immediately on staging; dimmed and "new" states must never appear together.
 
 ---
 
@@ -90,11 +91,11 @@ When a player drags a card to a new position, that custom order is maintained fo
 
 ### Functional Requirements
 
-- **FR-001**: The hand MUST be sorted automatically using the "By Suit" mode whenever new cards are dealt at game start or a round reset, unless the player has an existing custom order.
+- **FR-001**: The hand MUST be sorted automatically using the "By Suit" mode whenever new cards are dealt at game start or a round reset. At round start, both the active sort mode and any custom drag order are always reset to "By Suit" regardless of prior state.
 - **FR-002**: When a single card is drawn, the hand MUST insert the card at the correct sorted position for the active sort mode and display a "new card" indicator on that card.
-- **FR-003**: The "new card" indicator MUST auto-dismiss after 3 seconds and also dismiss immediately when the player taps the card.
+- **FR-003**: The "new card" indicator MUST auto-dismiss after 3 seconds and also dismiss immediately when the player taps the card or stages the card for a meld. A staged card must never show the indicator simultaneously with the staged/dimmed state.
 - **FR-004**: Initial deal (multiple cards at once) MUST NOT trigger the "new card" indicator on any card.
-- **FR-005**: The hand toolbar MUST provide two sort buttons — "By Suit" and "By Rank" — with the active mode visually indicated (e.g., underline, filled background).
+- **FR-005**: The hand toolbar MUST display a segmented control with two tabs — "By Suit" and "By Rank" — placed side by side. The active tab MUST have a filled/highlighted background; the inactive tab MUST be outlined. The control MUST be greyed out and non-interactive while cards are staged.
 - **FR-006**: "By Suit" sort MUST order cards: Jokers → ♠ (A→K→Q→…→3→2) → ♥ (A→K→…→2) → ♣ (A→K→…→2) → ♦ (A→K→…→2). Ace is the highest value card, positioned immediately after Jokers and above King.
 - **FR-007**: "By Rank" sort MUST order cards: Jokers → all A (♠♥♣♦) → all K → all Q → … → all 3 → all 2. Within each rank group, suit order is ♠ ♥ ♣ ♦.
 - **FR-008**: Both sort modes MUST start with the highest-value cards on the left (or right in RTL layout), descending to the lowest.
@@ -125,12 +126,20 @@ When a player drags a card to a new position, that custom order is maintained fo
 
 ---
 
+## Clarifications
+
+### Session 2026-04-14
+
+- Q: When a new round starts, should sort mode and custom drag order reset to default or carry over? → A: Reset to "By Suit" default on every new round start; custom drag order also cleared.
+- Q: What UI shape should the sort toolbar use — two separate buttons, segmented control, or single toggle? → A: Segmented control (two pill tabs side by side, active tab filled).
+- Q: Should the "new card" indicator show on a card that is staged before the 3 s auto-dismiss? → A: Suppress indicator immediately on staging; dimmed and "new" states must never coexist.
+
 ## Assumptions
 
 - Ace is intentionally the **highest** value card in this game, ranked above King (descending order: A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2). This is a display-sort concern only — it does not change the engine's scoring or meld validation logic.
 - Suit colour order for both sort modes follows the specified UX preference: ♠ Spades → ♥ Hearts → ♣ Clubs → ♦ Diamonds.
 - "New card indicator" is a UI-only concern — it does not affect game state or engine logic.
 - The feature applies only to the active player's hand area; opponent face-down hand areas are unaffected.
-- The sort mode preference is session-scoped (not persisted to AsyncStorage) — resetting the app returns to "By Suit" default.
+- The sort mode preference is session-scoped (not persisted to AsyncStorage) — resetting the app returns to "By Suit" default. At the start of every new round, both the sort mode and any custom drag order are reset to "By Suit" default, since the hand is entirely new cards.
 - Jokers have no suit; they always occupy the first (leftmost in LTR) position in every sort mode.
 - When two identical cards exist (multi-deck game), sort order between them is stable but unspecified.
