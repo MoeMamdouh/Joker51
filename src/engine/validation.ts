@@ -78,9 +78,6 @@ export function validateCombination(
   if (cards.length < 3) return { valid: false, error: 'COMBINATION_TOO_SHORT' };
 
   const jokerCount = cards.filter(c => c.isJoker).length;
-  if (context.isInitialMeld && jokerCount > 1) {
-    return { valid: false, error: 'JOKER_LIMIT_EXCEEDED' };
-  }
 
   const nonJokers = cards.filter(c => !c.isJoker);
 
@@ -144,14 +141,15 @@ function validateAsSequence(cards: Card[]): { valid: boolean; error?: EngineErro
   const hasAce = nonJokers.some(c => c.rank === Rank.ACE);
   const hasKing = nonJokers.some(c => c.rank === Rank.KING);
 
-  // Ace + King together with any rank in the middle (TWO–QUEEN) = wraparound
+  // Ace + King together with a rank BELOW Jack (TWO–TEN) = wraparound.
+  // J, Q can legitimately appear in ace-high sequences (J-Q-K-A).
+  // RANK_ORDER: ACE=0, TWO=1, ..., TEN=9, JACK=10, QUEEN=11, KING=12
   if (hasAce && hasKing) {
-    const hasMiddleRank = nonJokers.some(c => {
+    const hasLowRank = nonJokers.some(c => {
       const idx = RANK_ORDER.indexOf(c.rank as Rank);
-      return idx >= 1 && idx <= 10; // TWO(1) through QUEEN(11)... wait QUEEN is 11
-      // Actually: TWO=1, THREE=2, ..., TEN=9, JACK=10, QUEEN=11, KING=12
+      return idx >= 1 && idx <= 9; // TWO(1) through TEN(9) only
     });
-    if (hasMiddleRank) {
+    if (hasLowRank) {
       return { valid: false, error: 'ACE_WRAPAROUND' };
     }
   }

@@ -42,6 +42,17 @@ describe('validateCombination — sequences', () => {
     expect(result.error).toBe('ACE_WRAPAROUND');
   });
 
+  it('valid: J-K-A with Joker as Q (ace-high, Jack is not a middle rank)', () => {
+    const result = validateCombination([c(Rank.JACK, Suit.HEARTS), joker(), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)], { isInitialMeld: false });
+    expect(result.valid).toBe(true);
+  });
+
+  it('invalid: Ace wraparound with Jack and Two present', () => {
+    const result = validateCombination([c(Rank.ACE, Suit.SPADES), c(Rank.KING, Suit.SPADES), c(Rank.TWO, Suit.SPADES), c(Rank.THREE, Suit.SPADES)], { isInitialMeld: false });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('ACE_WRAPAROUND');
+  });
+
   it('minimum 3 cards required', () => {
     const result = validateCombination([c(Rank.FIVE, Suit.CLUBS), c(Rank.SIX, Suit.CLUBS)], { isInitialMeld: false });
     expect(result.valid).toBe(false);
@@ -108,10 +119,9 @@ describe('validateCombination — Joker substitution', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('2 Jokers rejected during initial meld', () => {
+  it('2 Jokers allowed in initial meld', () => {
     const result = validateCombination([joker(), joker(), c(Rank.SEVEN, Suit.CLUBS)], { isInitialMeld: true });
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('JOKER_LIMIT_EXCEEDED');
+    expect(result.valid).toBe(true);
   });
 
   it('2 Jokers allowed after initial meld', () => {

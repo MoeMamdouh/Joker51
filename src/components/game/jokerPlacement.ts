@@ -42,10 +42,20 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
   const suit = naturals[0].suit;
   if (!suit || naturals.some(c => c.suit !== suit)) return [];
 
+  // Ace is contextually high when King is also present (Q-K-A), not a wraparound.
+  // Map Ace to virtual index 13 (one above King=12) in that case.
+  const hasAce = naturals.some(c => c.rank === Rank.ACE);
+  const hasKing = naturals.some(c => c.rank === Rank.KING);
+  const aceHigh = hasAce && hasKing;
+  const rankIdx = (rank: Rank): number => {
+    if (rank === Rank.ACE && aceHigh) return 13;
+    return RANK_ORDER.indexOf(rank);
+  };
+
   // Get sorted rank indices of natural cards
   const naturalRankIndices = naturals
     .filter(c => c.rank !== null)
-    .map(c => RANK_ORDER.indexOf(c.rank!))
+    .map(c => rankIdx(c.rank!))
     .filter(i => i !== -1)
     .sort((a, b) => a - b);
 
@@ -57,7 +67,7 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
 
   const options: JokerSequenceOption[] = [];
   const sortedNaturals = [...naturals].sort(
-    (a, b) => RANK_ORDER.indexOf(a.rank!) - RANK_ORDER.indexOf(b.rank!)
+    (a, b) => rankIdx(a.rank!) - rankIdx(b.rank!)
   );
 
   // Option 1: Joker fills a gap between natural cards
@@ -65,7 +75,7 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
     if (!naturalSet.has(i)) {
       const rank = RANK_ORDER[i];
       // Insert the real Joker card at the correct sorted position
-      const cards = buildSequenceWithJoker(sortedNaturals, joker, i);
+      const cards = buildSequenceWithJoker(sortedNaturals, joker, i, rankIdx);
       options.push({
         cards,
         label: `Joker as ${RANK_LABELS[rank]}${SUIT_SYMBOLS[suit]}`,
@@ -82,8 +92,11 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
     });
   }
 
-  // Option 3: Joker extends above the sequence (natural cards are consecutive)
-  if (max < RANK_ORDER.length - 1 && naturalSet.size === max - min + 1) {
+  // Option 3: Joker extends above the sequence (natural cards are consecutive).
+  // Cap at virtual index 13 (Ace-high): Ace has no rank above it.
+  const maxRankIdx = aceHigh ? 13 : RANK_ORDER.length - 1;
+  if (max < maxRankIdx && naturalSet.size === max - min + 1) {
+    // For aceHigh, max=13 would already exceed maxRankIdx so this never fires beyond Ace.
     const rank = RANK_ORDER[max + 1];
     options.push({
       cards: [...sortedNaturals, joker],
@@ -98,14 +111,16 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
  * Inserts the actual Joker card into the sorted natural cards at the position
  * that corresponds to `jokerRankIndex` in RANK_ORDER.
  * The Joker card itself stays isJoker:true so the engine and hand-dimming work correctly.
+ * `rankIdx` is the caller's rank-index function (handles ace-high remapping).
  */
 function buildSequenceWithJoker(
   sortedNaturals: Card[],
   joker: Card,
   jokerRankIndex: number,
+  rankIdx: (rank: Rank) => number,
 ): Card[] {
   const insertAt = sortedNaturals.findIndex(
-    c => RANK_ORDER.indexOf(c.rank!) > jokerRankIndex
+    c => rankIdx(c.rank!) > jokerRankIndex
   );
   const result = [...sortedNaturals];
   if (insertAt === -1) {

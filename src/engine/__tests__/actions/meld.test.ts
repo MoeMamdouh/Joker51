@@ -76,12 +76,14 @@ describe('placeInitialMeld', () => {
     expect(result.error).toBe('NOT_YOUR_TURN');
   });
 
-  it('rejects JOKER_LIMIT_EXCEEDED for 2 Jokers in one combination during initial meld', () => {
+  it('allows 2 Jokers in one combination during initial meld', () => {
+    // 2 jokers + 7♣ is a valid set (jokers substitute missing suits); points counted
     const combo = [joker(), joker(), c(Rank.SEVEN, Suit.CLUBS)];
     const state = stateInActingPhase('p1', combo);
     const result = placeInitialMeld(state, { playerId: 'p1', combinations: [combo] });
+    // The combo only scores ~21 pts, so the initial meld fails on points, not on joker count
     expect(result.success).toBe(false);
-    expect(result.error).toBe('JOKER_LIMIT_EXCEEDED');
+    expect(result.error).toBe('MELD_BELOW_51_POINTS');
   });
 });
 
