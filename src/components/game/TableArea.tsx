@@ -15,7 +15,8 @@ interface TableAreaProps {
   canLayOff: boolean;
   activeCombinationId?: string;
   onCombinationPress?(combinationId: string): void;
-  canClaimJokerForCombination?(combination: Combination): boolean;
+  /** Returns the card-array index of the claimable Joker, or -1 if none. */
+  getClaimJokerCardIndex?(combination: Combination): number;
   onClaimJoker?(combinationId: string): void;
 }
 
@@ -25,7 +26,7 @@ export function TableArea({
   canLayOff,
   activeCombinationId,
   onCombinationPress,
-  canClaimJokerForCombination,
+  getClaimJokerCardIndex,
   onClaimJoker,
 }: TableAreaProps) {
   function getOwnerName(ownerId: string): string {
@@ -35,22 +36,23 @@ export function TableArea({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {combinations.map(combination => {
-        const showClaim = canClaimJokerForCombination
-          ? canClaimJokerForCombination(combination)
-          : false;
+        const claimIdx = getClaimJokerCardIndex ? getClaimJokerCardIndex(combination) : -1;
+        const canClaim = claimIdx >= 0;
         return (
           <CombinationRow
             key={combination.id}
             combination={combination}
             ownerName={getOwnerName(combination.ownerId)}
             onPress={
-              canLayOff && onCombinationPress
-                ? () => onCombinationPress(combination.id)
-                : undefined
+              canClaim && onClaimJoker
+                ? () => onClaimJoker(combination.id)
+                : canLayOff && onCombinationPress
+                  ? () => onCombinationPress(combination.id)
+                  : undefined
             }
-            showClaimJoker={showClaim}
+            claimJokerCardIndex={canClaim ? claimIdx : undefined}
             onClaimJoker={
-              showClaim && onClaimJoker
+              canClaim && onClaimJoker
                 ? () => onClaimJoker(combination.id)
                 : undefined
             }

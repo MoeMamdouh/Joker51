@@ -63,13 +63,14 @@ describe('TableArea', () => {
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  it('shows claim joker badge on combination with joker when canClaimJokerForCombination returns true', () => {
+  it('shows claim joker badge on the specific Joker card when getClaimJokerCardIndex returns its index', () => {
+    // c2 has Joker at index 1; getClaimJokerCardIndex returns 1 for c2, -1 for others
     const { getByTestId } = render(
       <TableArea
         combinations={combinations}
         players={players}
         canLayOff={false}
-        canClaimJokerForCombination={c => c.id === 'c2'}
+        getClaimJokerCardIndex={c => c.id === 'c2' ? 1 : -1}
         onClaimJoker={jest.fn()}
       />
     );

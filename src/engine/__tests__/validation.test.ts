@@ -36,21 +36,26 @@ describe('validateCombination — sequences', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('invalid: Ace wraparound K-A-2', () => {
+  it('invalid: K-A-2 (not enough jokers to form a full run)', () => {
     const result = validateCombination([c(Rank.KING, Suit.SPADES), c(Rank.ACE, Suit.SPADES), c(Rank.TWO, Suit.SPADES)], { isInitialMeld: false });
     expect(result.valid).toBe(false);
-    expect(result.error).toBe('ACE_WRAPAROUND');
+    expect(result.error).toBe('SEQUENCE_NOT_CONSECUTIVE');
   });
 
-  it('valid: J-K-A with Joker as Q (ace-high, Jack is not a middle rank)', () => {
+  it('valid: J-K-A with Joker as Q (ace-high)', () => {
     const result = validateCombination([c(Rank.JACK, Suit.HEARTS), joker(), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)], { isInitialMeld: false });
     expect(result.valid).toBe(true);
   });
 
-  it('invalid: Ace wraparound with Jack and Two present', () => {
+  it('valid: 9-J-K-A with two Jokers as 10 and Q', () => {
+    const result = validateCombination([c(Rank.NINE, Suit.HEARTS), joker(), c(Rank.JACK, Suit.HEARTS), joker(), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)], { isInitialMeld: false });
+    expect(result.valid).toBe(true);
+  });
+
+  it('invalid: A-K-2-3 (span too wide, not enough jokers)', () => {
     const result = validateCombination([c(Rank.ACE, Suit.SPADES), c(Rank.KING, Suit.SPADES), c(Rank.TWO, Suit.SPADES), c(Rank.THREE, Suit.SPADES)], { isInitialMeld: false });
     expect(result.valid).toBe(false);
-    expect(result.error).toBe('ACE_WRAPAROUND');
+    expect(result.error).toBe('SEQUENCE_NOT_CONSECUTIVE');
   });
 
   it('minimum 3 cards required', () => {
@@ -226,6 +231,77 @@ describe('getClaimableJokerCards', () => {
   it('sequence: returns null when player does not hold the required card', () => {
     const combination = combo([c(Rank.FIVE, Suit.CLUBS), joker(), c(Rank.SEVEN, Suit.CLUBS)]);
     const hand = [c(Rank.EIGHT, Suit.CLUBS)];
+    expect(getClaimableJokerCards(combination, hand)).toBeNull();
+  });
+
+  it('sequence: Joker at start (boundary below) — [Joker, K♥, A♥] → needs Q♥', () => {
+    // Joker extends below K, representing Q♥
+    const combination = combo([joker(), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)]);
+    const hand = [c(Rank.QUEEN, Suit.HEARTS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(1);
+    expect(result![0]).toEqual(c(Rank.QUEEN, Suit.HEARTS));
+  });
+
+  it('sequence: Joker at end (boundary above) — [6♣, 7♣, Joker] → needs 8♣', () => {
+    const combination = combo([c(Rank.SIX, Suit.CLUBS), c(Rank.SEVEN, Suit.CLUBS), joker()]);
+    const hand = [c(Rank.EIGHT, Suit.CLUBS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(1);
+    expect(result![0]).toEqual(c(Rank.EIGHT, Suit.CLUBS));
+  });
+
+  it('sequence: Joker at start — returns null when player does not hold boundary card', () => {
+    const combination = combo([joker(), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)]);
+    const hand = [c(Rank.JACK, Suit.HEARTS)]; // has J, not Q
+    expect(getClaimableJokerCards(combination, hand)).toBeNull();
+  });
+
+  it('multi-Joker sequence: [5♥,6♥,7♥,8♥,9♥,Joker,J♥,Joker,K♥] — player holds Q♥ → returns Q♥', () => {
+    // Joker1 = 10♥, Joker2 = Q♥; player has Q♥ → should claim Joker2
+    const combination = combo([
+      c(Rank.FIVE, Suit.HEARTS), c(Rank.SIX, Suit.HEARTS), c(Rank.SEVEN, Suit.HEARTS),
+      c(Rank.EIGHT, Suit.HEARTS), c(Rank.NINE, Suit.HEARTS),
+      joker(),
+      c(Rank.JACK, Suit.HEARTS),
+      joker(),
+      c(Rank.KING, Suit.HEARTS),
+    ]);
+    const hand = [c(Rank.QUEEN, Suit.HEARTS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(1);
+    expect(result![0]).toEqual(c(Rank.QUEEN, Suit.HEARTS));
+  });
+
+  it('multi-Joker sequence: [5♥,6♥,7♥,8♥,9♥,Joker,J♥,Joker,K♥] — player holds 10♥ → returns 10♥', () => {
+    const combination = combo([
+      c(Rank.FIVE, Suit.HEARTS), c(Rank.SIX, Suit.HEARTS), c(Rank.SEVEN, Suit.HEARTS),
+      c(Rank.EIGHT, Suit.HEARTS), c(Rank.NINE, Suit.HEARTS),
+      joker(),
+      c(Rank.JACK, Suit.HEARTS),
+      joker(),
+      c(Rank.KING, Suit.HEARTS),
+    ]);
+    const hand = [c(Rank.TEN, Suit.HEARTS)];
+    const result = getClaimableJokerCards(combination, hand);
+    expect(result).not.toBeNull();
+    expect(result).toHaveLength(1);
+    expect(result![0]).toEqual(c(Rank.TEN, Suit.HEARTS));
+  });
+
+  it('multi-Joker sequence: returns null when player holds neither replacement card', () => {
+    const combination = combo([
+      c(Rank.FIVE, Suit.HEARTS), c(Rank.SIX, Suit.HEARTS), c(Rank.SEVEN, Suit.HEARTS),
+      c(Rank.EIGHT, Suit.HEARTS), c(Rank.NINE, Suit.HEARTS),
+      joker(),
+      c(Rank.JACK, Suit.HEARTS),
+      joker(),
+      c(Rank.KING, Suit.HEARTS),
+    ]);
+    const hand = [c(Rank.ACE, Suit.HEARTS)]; // has A, not 10 or Q
     expect(getClaimableJokerCards(combination, hand)).toBeNull();
   });
 

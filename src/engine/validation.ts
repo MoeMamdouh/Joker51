@@ -12,6 +12,75 @@ const ALL_SUITS: Suit[] = [Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS];
  * Sets with 3 natural cards: 1 card (the one missing suit).
  * Sets with 2 natural cards: 2 cards (both missing suits).
  */
+/**
+ * Returns the card-array index of the specific Joker the player can claim, or -1.
+ * For sets, returns the index of the (only) Joker when the player holds all required cards.
+ * For sequences, returns the index of the first Joker whose rank the player holds.
+ */
+export function getClaimableJokerIndex(
+  combination: Combination,
+  playerHand: readonly Card[]
+): number {
+  const nonJokers = combination.cards.filter(c => !c.isJoker) as Card[];
+
+  if (combination.type === 'set') {
+    const rank = nonJokers[0]?.rank;
+    if (!rank) return -1;
+    const presentSuits = new Set(nonJokers.map(c => c.suit));
+    const missingSuits = ALL_SUITS.filter(s => !presentSuits.has(s));
+    const needed: Card[] = missingSuits.map(s => ({ rank, suit: s, isJoker: false }));
+    const canClaim = needed.every(card =>
+      playerHand.some(h => !h.isJoker && h.rank === card.rank && h.suit === card.suit)
+    );
+    if (!canClaim) return -1;
+    return combination.cards.findIndex(c => c.isJoker);
+  }
+
+  // Sequence: find which Joker position the player can replace
+  const suit = nonJokers[0]?.suit;
+  if (!suit) return -1;
+
+  const aceHigh = nonJokers.some(c => c.rank === Rank.ACE) && nonJokers.some(c => c.rank === Rank.KING);
+  const seqRankIdx = (rank: Rank): number => {
+    if (rank === Rank.ACE && aceHigh) return 13;
+    return RANK_ORDER.indexOf(rank);
+  };
+
+  for (let jPos = 0; jPos < combination.cards.length; jPos++) {
+    if (!combination.cards[jPos].isJoker) continue;
+    let prevVIdx: number | null = null;
+    let prevOffset = 0;
+    for (let i = jPos - 1; i >= 0; i--) {
+      if (!combination.cards[i].isJoker) {
+        prevVIdx = seqRankIdx(combination.cards[i].rank as Rank);
+        prevOffset = jPos - i;
+        break;
+      }
+    }
+    let nextVIdx: number | null = null;
+    let nextOffset = 0;
+    for (let i = jPos + 1; i < combination.cards.length; i++) {
+      if (!combination.cards[i].isJoker) {
+        nextVIdx = seqRankIdx(combination.cards[i].rank as Rank);
+        nextOffset = i - jPos;
+        break;
+      }
+    }
+    let rankVIdx: number | null = null;
+    if (prevVIdx !== null) rankVIdx = prevVIdx + prevOffset;
+    else if (nextVIdx !== null) rankVIdx = nextVIdx - nextOffset;
+    if (rankVIdx === null || rankVIdx < 0 || rankVIdx >= RANK_ORDER.length) continue;
+    const jokerRank = RANK_ORDER[rankVIdx];
+    if (!jokerRank) continue;
+    const needed: Card = { rank: jokerRank, suit, isJoker: false };
+    if (playerHand.some(h => !h.isJoker && h.rank === needed.rank && h.suit === needed.suit)) {
+      return jPos;
+    }
+  }
+
+  return -1;
+}
+
 export function getClaimableJokerCards(
   combination: Combination,
   playerHand: readonly Card[]
@@ -35,40 +104,56 @@ export function getClaimableJokerCards(
     return needed;
   }
 
-  // Sequence: determine the card the Joker represents by its position
+  // Sequence: for each Joker in the combination, determine its rank by its position
+  // relative to neighbouring natural cards, then check if the player holds that card.
+  // This handles internal-gap Jokers, boundary Jokers, and multi-Joker sequences.
   const suit = nonJokers[0]?.suit;
   if (!suit) return null;
 
-  // Collect all rank indices occupied by non-Jokers
   const aceHigh = nonJokers.some(c => c.rank === Rank.ACE) && nonJokers.some(c => c.rank === Rank.KING);
   const rankIdx = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;
     return RANK_ORDER.indexOf(rank);
   };
 
-  const naturalIndices = nonJokers.map(c => rankIdx(c.rank as Rank)).sort((a, b) => a - b);
-  const min = naturalIndices[0];
-  const max = naturalIndices[naturalIndices.length - 1];
-  const naturalSet = new Set(naturalIndices);
-  const gapRanks: Rank[] = [];
-  for (let r = min; r <= max; r++) {
-    if (!naturalSet.has(r)) gapRanks.push(RANK_ORDER[r]);
+  for (let jPos = 0; jPos < combination.cards.length; jPos++) {
+    if (!combination.cards[jPos].isJoker) continue;
+
+    // Determine rank at this Joker's position by anchoring off the nearest natural cards
+    let prevVIdx: number | null = null;
+    let prevOffset = 0;
+    for (let i = jPos - 1; i >= 0; i--) {
+      if (!combination.cards[i].isJoker) {
+        prevVIdx = rankIdx(combination.cards[i].rank as Rank);
+        prevOffset = jPos - i;
+        break;
+      }
+    }
+    let nextVIdx: number | null = null;
+    let nextOffset = 0;
+    for (let i = jPos + 1; i < combination.cards.length; i++) {
+      if (!combination.cards[i].isJoker) {
+        nextVIdx = rankIdx(combination.cards[i].rank as Rank);
+        nextOffset = i - jPos;
+        break;
+      }
+    }
+
+    let rankVIdx: number | null = null;
+    if (prevVIdx !== null) rankVIdx = prevVIdx + prevOffset;
+    else if (nextVIdx !== null) rankVIdx = nextVIdx - nextOffset;
+
+    if (rankVIdx === null || rankVIdx < 0 || rankVIdx >= RANK_ORDER.length) continue;
+    const jokerRank = RANK_ORDER[rankVIdx];
+    if (!jokerRank) continue;
+
+    const needed: Card = { rank: jokerRank, suit, isJoker: false };
+    if (playerHand.some(h => !h.isJoker && h.rank === needed.rank && h.suit === needed.suit)) {
+      return [needed];
+    }
   }
 
-  // Map Joker (by its position among all jokers) to its gap rank
-  const jokerPositions = combination.cards.reduce<number[]>((acc, c, i) => {
-    if (c.isJoker) acc.push(i);
-    return acc;
-  }, []);
-  const jokerPosInList = jokerPositions.indexOf(jokerIndex);
-  const assignedRank = gapRanks[jokerPosInList];
-  if (!assignedRank) return null;
-
-  const needed: Card = { rank: assignedRank, suit, isJoker: false };
-  if (!playerHand.some(h => !h.isJoker && h.rank === needed.rank && h.suit === needed.suit)) {
-    return null;
-  }
-  return [needed];
+  return null;
 }
 
 export function validateCombination(
@@ -141,20 +226,11 @@ function validateAsSequence(cards: Card[]): { valid: boolean; error?: EngineErro
   const hasAce = nonJokers.some(c => c.rank === Rank.ACE);
   const hasKing = nonJokers.some(c => c.rank === Rank.KING);
 
-  // Ace + King together with a rank BELOW Jack (TWO–TEN) = wraparound.
-  // J, Q can legitimately appear in ace-high sequences (J-Q-K-A).
-  // RANK_ORDER: ACE=0, TWO=1, ..., TEN=9, JACK=10, QUEEN=11, KING=12
-  if (hasAce && hasKing) {
-    const hasLowRank = nonJokers.some(c => {
-      const idx = RANK_ORDER.indexOf(c.rank as Rank);
-      return idx >= 1 && idx <= 9; // TWO(1) through TEN(9) only
-    });
-    if (hasLowRank) {
-      return { valid: false, error: 'ACE_WRAPAROUND' };
-    }
-  }
-
-  // Remap Ace to 13 when it appears alongside KING (Ace-high position)
+  // Remap Ace to virtual index 13 when it appears alongside KING (Ace-high).
+  // No explicit wraparound guard is needed: the span/gap check below already
+  // rejects true wraparounds (e.g. K-A-2 has span=12, gaps=10, jokerCount=0 →
+  // SEQUENCE_NOT_CONSECUTIVE) and correctly accepts long Ace-high runs like
+  // 9-10-J-Q-K-A (gaps match joker count).
   const aceHigh = hasAce && hasKing;
   const rankIndex = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;

@@ -48,12 +48,13 @@ describe('CombinationRow', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('shows Joker claim badge when showClaimJoker is true', () => {
+  it('shows Joker claim badge only on the specified card index', () => {
+    // comboWithJoker: [K♥, Joker, Q♥] — Joker is at index 1
     const { getByTestId } = render(
       <CombinationRow
         combination={comboWithJoker}
         ownerName="Bob"
-        showClaimJoker
+        claimJokerCardIndex={1}
         onClaimJoker={jest.fn()}
       />
     );
@@ -66,7 +67,7 @@ describe('CombinationRow', () => {
       <CombinationRow
         combination={comboWithJoker}
         ownerName="Bob"
-        showClaimJoker
+        claimJokerCardIndex={1}
         onClaimJoker={onClaimJoker}
       />
     );
@@ -74,9 +75,9 @@ describe('CombinationRow', () => {
     expect(onClaimJoker).toHaveBeenCalledTimes(1);
   });
 
-  it('does not show claim badge when showClaimJoker is false', () => {
+  it('does not show claim badge when claimJokerCardIndex is undefined', () => {
     const { queryByTestId } = render(
-      <CombinationRow combination={comboWithJoker} ownerName="Bob" showClaimJoker={false} />
+      <CombinationRow combination={comboWithJoker} ownerName="Bob" />
     );
     expect(queryByTestId('claim-joker-badge')).toBeNull();
   });

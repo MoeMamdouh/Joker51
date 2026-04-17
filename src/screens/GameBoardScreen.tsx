@@ -20,7 +20,7 @@ import { JokerPlacementSheet, JokerSequenceOption } from '../components/game/Jok
 import { computeJokerSequenceOptions } from '../components/game/jokerPlacement';
 import { colors, spacing, typography, radii } from '../theme/tokens';
 import { Card, Combination, GameStatus, TurnPhase } from '../engine/types';
-import { validateCombination, calculateMeldPoints, getClaimableJokerCards } from '../engine';
+import { validateCombination, calculateMeldPoints, getClaimableJokerCards, getClaimableJokerIndex } from '../engine';
 
 const ERROR_UI_MAP: Record<string, string> = {
   COMBINATION_TOO_SHORT: 'combinationTooShort',
@@ -102,14 +102,14 @@ export function GameBoardScreen() {
       config.players.findIndex(p => p.id === b.ownerId)
   );
 
-  // Joker claim: engine helper validates player holds ALL required replacement cards
-  function canClaimJokerForCombination(combination: Combination): boolean {
-    if (!hasMelded) return false;
-    return getClaimableJokerCards(combination, activeCards) !== null;
+  // Returns the card-array index of the specific Joker the player can claim, or -1.
+  function getClaimJokerCardIndex(combination: Combination): number {
+    if (!hasMelded) return -1;
+    return getClaimableJokerIndex(combination, activeCards);
   }
 
   const canClaimJoker = hasMelded &&
-    orderedCombinations.some(canClaimJokerForCombination);
+    orderedCombinations.some(c => getClaimJokerCardIndex(c) >= 0);
 
   // Cumulative scores
   function getCumulativeScore(playerId: string): number {
@@ -344,7 +344,7 @@ export function GameBoardScreen() {
         players={playerList}
         canLayOff={hasMelded && !isDrawing}
         onCombinationPress={handleLayOff}
-        canClaimJokerForCombination={canClaimJokerForCombination}
+        getClaimJokerCardIndex={getClaimJokerCardIndex}
         onClaimJoker={handleClaimJoker}
       />
 
