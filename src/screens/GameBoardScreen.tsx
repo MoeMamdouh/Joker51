@@ -42,7 +42,10 @@ export function GameBoardScreen() {
 
   const [pendingHandOff, setPendingHandOff] = useState(false);
   const [nextPlayerName, setNextPlayerName] = useState('');
-  const [showRoundSummary, setShowRoundSummary] = useState(false);
+  // When resuming a saved game that ended mid-round, show the summary immediately.
+  const [showRoundSummary, setShowRoundSummary] = useState(
+    game?.status === GameStatus.ROUND_ENDED || game?.status === GameStatus.GAME_OVER
+  );
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [stagedCombinations, setStagedCombinations] = useState<Card[][]>([]);
