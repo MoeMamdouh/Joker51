@@ -1,4 +1,5 @@
-import { Card, Rank, RANK_ORDER, Suit } from '../../engine/types';
+import { Card, Combination, Rank, RANK_ORDER, Suit } from '../../engine/types';
+import { isAceHigh } from '../../engine/validation';
 import { JokerSequenceOption } from './JokerPlacementSheet';
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -44,17 +45,17 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
   if (jokerCount === 0) return [];
 
   const naturals = stagedCards.filter(c => !c.isJoker);
-  if (naturals.length < 2) return [];
+  // Need at least 1 natural (for suit/rank context) and 3 total cards (minimum valid combination).
+  // 1 natural + 2 jokers = 3 cards is valid; 1 natural + 1 joker = 2 cards is too short.
+  if (naturals.length < 1 || stagedCards.length < 3) return [];
 
   // All natural cards must share the same suit
   const suit = naturals[0].suit;
   if (!suit || naturals.some(c => c.suit !== suit)) return [];
 
-  // Ace is contextually high when King is also present (Q-K-A), not a wraparound.
-  // Map Ace to virtual index 13 (one above King=12) in that case.
-  const hasAce = naturals.some(c => c.rank === Rank.ACE);
-  const hasKing = naturals.some(c => c.rank === Rank.KING);
-  const aceHigh = hasAce && hasKing;
+  // Ace is contextually high when it can follow King (natural or Joker-represented).
+  // isAceHigh detects this even when King's position is filled by a Joker.
+  const aceHigh = isAceHigh(naturals, jokerCount);
   const rankIdx = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;
     return RANK_ORDER.indexOf(rank);
@@ -73,8 +74,11 @@ export function computeJokerSequenceOptions(stagedCards: Card[]): JokerSequenceO
   const naturalSet = new Set(naturalRankIndices);
   const sortedNaturals = [...naturals].sort((a, b) => rankIdx(a.rank!) - rankIdx(b.rank!));
 
-  // Upper bound for rank indices: virtual 13 for Ace-high, otherwise the last RANK_ORDER index
-  const maxRankBound = aceHigh ? 13 : RANK_ORDER.length - 1;
+  // Upper bound for rank indices: Ace (virtual 13) can always extend above King.
+  // Allow endIdx=13 when the sequence's natural max, or natural max + Jokers, reaches King.
+  const kingIdx = RANK_ORDER.indexOf(Rank.KING);
+  const canExtendToAce = max >= kingIdx || max + jokerCount > kingIdx;
+  const maxRankBound = aceHigh ? 13 : (canExtendToAce ? 13 : RANK_ORDER.length - 1);
 
   // All gaps strictly between min and max that are not covered by naturals
   const internalGaps: number[] = [];
@@ -158,12 +162,120 @@ function buildLabel(
     positions.push(`${RANK_LABELS[RANK_ORDER[gapIdx]]}${SUIT_SYMBOLS[suit]}`);
   }
 
-  // Above-extension jokers (ascending)
+  // Above-extension jokers (ascending).
+  // Position 13 is the virtual Ace-high slot (beyond RANK_ORDER's last index).
   for (let i = 1; i <= aboveCount; i++) {
-    const rank = RANK_ORDER[max + i];
+    const posIdx = max + i;
+    const rank = posIdx < RANK_ORDER.length ? RANK_ORDER[posIdx] : Rank.ACE;
     positions.push(`${RANK_LABELS[rank]}${SUIT_SYMBOLS[suit]}`);
   }
 
   if (positions.length === 1) return `Joker as ${positions[0]}`;
   return `Jokers as ${positions.join(' & ')}`;
+}
+
+/**
+ * Returns a display label like "=K♠" showing what rank the Joker at `jokerIdx`
+ * represents within `cards`, inferred from surrounding natural card positions.
+ * Returns null if the rank cannot be determined.
+ */
+export function getJokerRankLabel(cards: Card[], jokerIdx: number): string | null {
+  const suit = cards.find(c => !c.isJoker)?.suit ?? null;
+
+  let prevRankIdx: number | null = null;
+  let prevOffset = 0;
+  for (let i = jokerIdx - 1; i >= 0; i--) {
+    if (!cards[i].isJoker) {
+      prevRankIdx = RANK_ORDER.indexOf(cards[i].rank as Rank);
+      prevOffset = jokerIdx - i;
+      break;
+    }
+  }
+  let nextRankIdx: number | null = null;
+  let nextOffset = 0;
+  for (let i = jokerIdx + 1; i < cards.length; i++) {
+    if (!cards[i].isJoker) {
+      nextRankIdx = RANK_ORDER.indexOf(cards[i].rank as Rank);
+      nextOffset = i - jokerIdx;
+      break;
+    }
+  }
+
+  let rankVIdx: number | null = null;
+  if (prevRankIdx !== null) rankVIdx = prevRankIdx + prevOffset;
+  else if (nextRankIdx !== null) rankVIdx = nextRankIdx - nextOffset;
+
+  // Virtual index 13 = Ace-high (position after King); anything beyond is invalid.
+  if (rankVIdx === null || rankVIdx < 0 || rankVIdx > RANK_ORDER.length) return null;
+  const rank = rankVIdx >= RANK_ORDER.length ? Rank.ACE : RANK_ORDER[rankVIdx];
+  if (!rank) return null;
+
+  return `=${RANK_LABELS[rank]}${suit ? SUIT_SYMBOLS[suit] : ''}`;
+}
+
+/**
+ * Computes valid positions for laying off a Joker onto an existing sequence.
+ * Returns 0, 1, or 2 options (extend at start and/or end).
+ */
+export function computeJokerLayOffOptions(combination: Combination): JokerSequenceOption[] {
+  if (combination.type !== 'sequence') return [];
+
+  const naturals = combination.cards.filter(c => !c.isJoker) as Card[];
+  if (naturals.length === 0) return [];
+
+  const suit = naturals[0].suit;
+  if (!suit) return [];
+
+  // Determine effective sequence boundaries (accounting for existing boundary Jokers)
+  let leadingJokers = 0;
+  for (const card of combination.cards) {
+    if (card.isJoker) leadingJokers++;
+    else break;
+  }
+  let trailingJokers = 0;
+  for (let i = combination.cards.length - 1; i >= 0; i--) {
+    if (combination.cards[i].isJoker) trailingJokers++;
+    else break;
+  }
+
+  const existingJokerCount = combination.cards.filter(c => c.isJoker).length;
+  const aceHigh = isAceHigh(naturals, existingJokerCount + 1);
+  const rankIdx = (rank: Rank): number => {
+    if (rank === Rank.ACE && aceHigh) return 13;
+    return RANK_ORDER.indexOf(rank);
+  };
+
+  const indices = naturals.map(c => rankIdx(c.rank!)).sort((a, b) => a - b);
+  const minIdx = indices[0];
+  const maxIdx = indices[indices.length - 1];
+
+  const effectiveMin = minIdx - leadingJokers;
+  const effectiveMax = maxIdx + trailingJokers;
+
+  const jokerCard = (): Card => ({ rank: null, suit: null, isJoker: true });
+  const options: JokerSequenceOption[] = [];
+
+  // Option: extend at start (Joker represents effectiveMin - 1)
+  const startRankIdx = effectiveMin - 1;
+  if (startRankIdx >= 0) {
+    const jokerRank = RANK_ORDER[startRankIdx];
+    if (jokerRank) {
+      const newCards = [jokerCard(), ...combination.cards];
+      options.push({ cards: newCards, label: `Joker as ${RANK_LABELS[jokerRank]}${SUIT_SYMBOLS[suit]}` });
+    }
+  }
+
+  // Option: extend at end (Joker represents effectiveMax + 1, up to virtual Ace at 13)
+  const endRankIdx = effectiveMax + 1;
+  const kingIdx = RANK_ORDER.indexOf(Rank.KING);
+  const maxBound = effectiveMax >= kingIdx ? 13 : RANK_ORDER.length - 1;
+  if (endRankIdx <= maxBound) {
+    const jokerRank = endRankIdx >= RANK_ORDER.length ? Rank.ACE : RANK_ORDER[endRankIdx];
+    if (jokerRank) {
+      const newCards = [...combination.cards, jokerCard()];
+      options.push({ cards: newCards, label: `Joker as ${RANK_LABELS[jokerRank]}${SUIT_SYMBOLS[suit]}` });
+    }
+  }
+
+  return options;
 }

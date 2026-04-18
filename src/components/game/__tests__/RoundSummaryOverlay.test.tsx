@@ -10,17 +10,26 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: Record<string, unknown>) => {
       if (key === 'game.roundSummary.title') return `Round ${opts?.round} Complete`;
-      if (key === 'game.roundSummary.penalty') return `Penalty: ${opts?.points} pts`;
+      if (key === 'game.roundSummary.gameOverTitle') return 'Game Over!';
       if (key === 'game.roundSummary.nextRound') return 'Next Round';
-      if (key === 'game.roundSummary.gameOver') return 'Game Over';
+      if (key === 'game.roundSummary.gameOver') return 'New Game';
       if (key === 'game.roundSummary.playAgain') return 'Play Again';
       if (key === 'game.roundSummary.winner') return 'Round Winner';
       if (key === 'game.roundSummary.coWinners') return 'Round Co-Winners';
-      if (key === 'game.score.label') return `: ${opts?.score}`;
+      if (key === 'game.roundSummary.champion') return 'Champion';
+      if (key === 'game.roundSummary.thisRound') return 'This Round';
+      if (key === 'game.roundSummary.standings') return 'Standings';
+      if (key === 'game.roundSummary.history') return 'Round History';
+      if (key === 'game.roundSummary.pts') return 'pts';
       return key;
     },
   }),
 }));
+
+const players = [
+  { playerId: 'p1', name: 'Alice' },
+  { playerId: 'p2', name: 'Bob' },
+];
 
 const scores = [
   { playerId: 'p1', name: 'Alice', score: 10 },
@@ -32,47 +41,51 @@ const latestRoundScores = [
   { playerId: 'p2', penalty: 25 },
 ];
 
+const defaultProps = {
+  players,
+  totalRounds: 4 as const,
+  roundResults: [] as const,
+  cumulativeScores: scores,
+  roundWinnerIds: ['p1'],
+  latestRoundScores,
+  isGameOver: false,
+  onNextRound: jest.fn(),
+  onNewGame: jest.fn(),
+  onPlayAgain: jest.fn(),
+};
+
 describe('RoundSummaryOverlay', () => {
-  it('renders round title and player penalties', () => {
+  it('renders round title', () => {
     const { getByText } = render(
-      <RoundSummaryOverlay
-        currentRound={2}
-        cumulativeScores={scores}
-        roundWinnerIds={['p1']}
-        latestRoundScores={latestRoundScores}
-        isGameOver={false}
-        onNextRound={jest.fn()} onNewGame={jest.fn()} onPlayAgain={jest.fn()}
-      />
+      <RoundSummaryOverlay {...defaultProps} currentRound={2} />
     );
     expect(getByText('Round 2 Complete')).toBeTruthy();
-    expect(getByText('Penalty: 10 pts')).toBeTruthy();
-    expect(getByText('Penalty: 25 pts')).toBeTruthy();
   });
 
-  it('highlights single winner', () => {
-    const { getByText } = render(
-      <RoundSummaryOverlay
-        currentRound={1}
-        cumulativeScores={scores}
-        roundWinnerIds={['p1']}
-        latestRoundScores={latestRoundScores}
-        isGameOver={false}
-        onNextRound={jest.fn()} onNewGame={jest.fn()} onPlayAgain={jest.fn()}
-      />
+  it('renders player names in this-round section', () => {
+    const { getAllByText } = render(
+      <RoundSummaryOverlay {...defaultProps} currentRound={1} />
+    );
+    // Alice and Bob both appear in the standings
+    expect(getAllByText('Alice').length).toBeGreaterThan(0);
+    expect(getAllByText('Bob').length).toBeGreaterThan(0);
+  });
+
+  it('highlights single winner label', () => {
+    const { getByText, getAllByText } = render(
+      <RoundSummaryOverlay {...defaultProps} currentRound={1} />
     );
     expect(getByText('Round Winner')).toBeTruthy();
-    expect(getByText('Alice')).toBeTruthy();
+    // Alice appears in multiple sections (winner banner, this-round, standings)
+    expect(getAllByText('Alice').length).toBeGreaterThan(0);
   });
 
   it('shows co-winners label when two players tie', () => {
     const { getByText } = render(
       <RoundSummaryOverlay
+        {...defaultProps}
         currentRound={1}
-        cumulativeScores={scores}
         roundWinnerIds={['p1', 'p2']}
-        latestRoundScores={latestRoundScores}
-        isGameOver={false}
-        onNextRound={jest.fn()} onNewGame={jest.fn()} onPlayAgain={jest.fn()}
       />
     );
     expect(getByText('Round Co-Winners')).toBeTruthy();
@@ -80,34 +93,40 @@ describe('RoundSummaryOverlay', () => {
 
   it('shows Next Round button when not game over', () => {
     const { getByTestId } = render(
-      <RoundSummaryOverlay
-        currentRound={1}
-        cumulativeScores={scores}
-        roundWinnerIds={['p1']}
-        latestRoundScores={latestRoundScores}
-        isGameOver={false}
-        onNextRound={jest.fn()} onNewGame={jest.fn()} onPlayAgain={jest.fn()}
-      />
+      <RoundSummaryOverlay {...defaultProps} currentRound={1} />
     );
     expect(getByTestId('btn-next-round')).toBeTruthy();
   });
 
-  it('shows Game Over and Play Again when game is over', () => {
+  it('shows Game Over title and Play Again / New Game buttons when game is over', () => {
     const onNewGame = jest.fn();
     const onPlayAgain = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId, getByText } = render(
       <RoundSummaryOverlay
+        {...defaultProps}
         currentRound={4}
-        cumulativeScores={scores}
-        roundWinnerIds={['p1']}
-        latestRoundScores={latestRoundScores}
         isGameOver={true}
-        onNextRound={jest.fn()} onNewGame={onNewGame} onPlayAgain={onPlayAgain}
+        onNewGame={onNewGame}
+        onPlayAgain={onPlayAgain}
       />
     );
+    expect(getByText('Game Over!')).toBeTruthy();
     expect(getByTestId('btn-play-again')).toBeTruthy();
     expect(getByTestId('btn-game-over')).toBeTruthy();
     fireEvent.press(getByTestId('btn-play-again'));
     expect(onPlayAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows round history dots when roundResults are provided', () => {
+    const { getByText } = render(
+      <RoundSummaryOverlay
+        {...defaultProps}
+        currentRound={2}
+        roundResults={[
+          { roundNumber: 1, scores: latestRoundScores, winnerId: 'p1' },
+        ]}
+      />
+    );
+    expect(getByText('Round History')).toBeTruthy();
   });
 });

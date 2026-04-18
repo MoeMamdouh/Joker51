@@ -4,11 +4,22 @@ import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radii } from '../../theme/tokens';
 import { useLanguageStore } from '../../store/languageStore';
 import { formatNumber } from '../../i18n/formatNumber';
+import { RoundResult } from '../../engine/types';
+
+// ─── Player colour palette (assigned by player order) ─────────────────────────
+
+export const PLAYER_COLORS = ['#E8B84B', '#4ECDC4', '#FF6B6B', '#A78BFA'];
+
+export function getPlayerColor(index: number): string {
+  return PLAYER_COLORS[index % PLAYER_COLORS.length];
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PlayerScore {
   playerId: string;
   name: string;
-  score: number;
+  score: number; // cumulative penalty (lower = better)
 }
 
 interface RoundScore {
@@ -16,22 +27,35 @@ interface RoundScore {
   penalty: number;
 }
 
+interface PlayerInfo {
+  playerId: string;
+  name: string;
+}
+
 interface RoundSummaryOverlayProps {
   currentRound: number;
+  totalRounds: number;
+  players: PlayerInfo[];
   cumulativeScores: PlayerScore[];
   roundWinnerIds: string[];
   latestRoundScores: readonly RoundScore[];
+  roundResults: readonly RoundResult[];
   isGameOver: boolean;
   onNextRound(): void;
   onNewGame(): void;
   onPlayAgain(): void;
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export function RoundSummaryOverlay({
   currentRound,
+  totalRounds,
+  players,
   cumulativeScores,
   roundWinnerIds,
   latestRoundScores,
+  roundResults,
   isGameOver,
   onNextRound,
   onNewGame,
@@ -40,49 +64,190 @@ export function RoundSummaryOverlay({
   const { t } = useTranslation();
   const locale = useLanguageStore(s => s.locale);
 
-  const winnerLabel = roundWinnerIds.length > 1
-    ? t('game.roundSummary.coWinners')
-    : t('game.roundSummary.winner');
+  // Sort standings ascending (lowest penalty = winner on top)
+  const sortedStandings = [...cumulativeScores].sort((a, b) => a.score - b.score);
+  const maxTotal = Math.max(...cumulativeScores.map(p => p.score), 1);
+  const leaderScore = sortedStandings[0]?.score ?? 0;
+
+  // Sort this round's scores ascending
+  const sortedRound = [...latestRoundScores].sort((a, b) => a.penalty - b.penalty);
+
+  // Winner display names
+  const roundWinnerNames = roundWinnerIds
+    .map(id => players.find(p => p.playerId === id)?.name ?? id)
+    .join(' & ');
+
+  const gameWinnerName = isGameOver
+    ? (players.find(p => p.playerId === sortedStandings[0]?.playerId)?.name ?? '')
+    : '';
 
   return (
     <View style={styles.overlay}>
-      <Text style={styles.title}>
-        {t('game.roundSummary.title', { round: currentRound })}
-      </Text>
 
-      <Text style={styles.sectionLabel}>{winnerLabel}</Text>
+      {/* ── Header ── */}
+      <View style={styles.header}>
+        <Text style={styles.title}>
+          {isGameOver ? t('game.roundSummary.gameOverTitle') : t('game.roundSummary.title', { round: currentRound })}
+        </Text>
 
-      <ScrollView style={styles.scoreList} contentContainerStyle={styles.scoreContent}>
-        {cumulativeScores.map(player => {
-          const isWinner = roundWinnerIds.includes(player.playerId);
-          const latestPenalty = latestRoundScores.find(s => s.playerId === player.playerId)?.penalty ?? 0;
-          return (
-            <View
-              key={player.playerId}
-              style={[styles.scoreRow, isWinner && styles.winnerRow]}
-            >
-              <Text style={[styles.playerName, isWinner && styles.winnerText]}>
-                {player.name}
-              </Text>
-              <Text style={[styles.penaltyText, isWinner && styles.winnerText]}>
-                {t('game.roundSummary.penalty', { points: formatNumber(latestPenalty, locale) })}
-              </Text>
-              <Text style={[styles.totalText, isWinner && styles.winnerText]}>
-                {t('game.score.label', { name: '', score: formatNumber(player.score, locale) }).trim()}
-              </Text>
+        <View style={styles.winnerBanner}>
+          <Text style={styles.winnerBannerLabel}>
+            {isGameOver
+              ? t('game.roundSummary.champion')
+              : roundWinnerIds.length > 1
+                ? t('game.roundSummary.coWinners')
+                : t('game.roundSummary.winner')}
+          </Text>
+          <Text style={styles.winnerBannerName}>
+            {isGameOver ? gameWinnerName : roundWinnerNames}
+          </Text>
+        </View>
+      </View>
+
+      {/* ── Scrollable content ── */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* This Round */}
+        <Text style={styles.sectionLabel}>{t('game.roundSummary.thisRound')}</Text>
+        <View style={styles.card}>
+          {sortedRound.map((rs, i) => {
+            const pIdx = players.findIndex(p => p.playerId === rs.playerId);
+            const pName = players[pIdx]?.name ?? rs.playerId;
+            const color = getPlayerColor(pIdx);
+            const isWinner = roundWinnerIds.includes(rs.playerId);
+            return (
+              <View key={rs.playerId} style={[styles.roundRow, i > 0 && styles.rowDivider]}>
+                <View style={[styles.dot, { backgroundColor: color }]} />
+                <Text
+                  style={[styles.rowName, isWinner && { color }]}
+                  numberOfLines={1}
+                >
+                  {pName}
+                </Text>
+                {isWinner && (
+                  <View style={[styles.winnerPill, { backgroundColor: color + '28', borderColor: color }]}>
+                    <Text style={[styles.winnerPillText, { color }]}>✓</Text>
+                  </View>
+                )}
+                <View style={styles.spacer} />
+                <Text style={[styles.penaltyValue, isWinner && { color }]}>
+                  {rs.penalty === 0
+                    ? `0 ${t('game.roundSummary.pts')}`
+                    : `+${formatNumber(rs.penalty, locale)} ${t('game.roundSummary.pts')}`}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Standings bar chart */}
+        <Text style={[styles.sectionLabel, styles.sectionGap]}>{t('game.roundSummary.standings')}</Text>
+        <View style={styles.card}>
+          {sortedStandings.map((player, i) => {
+            const pIdx = players.findIndex(p => p.playerId === player.playerId);
+            const color = getPlayerColor(pIdx);
+            const isLeader = player.score === leaderScore;
+            const ratio = Math.max(player.score / maxTotal, 0.02);
+            return (
+              <View key={player.playerId} style={[styles.barRow, i > 0 && styles.rowDivider]}>
+                <View style={[styles.dot, { backgroundColor: color }]} />
+                <Text
+                  style={[styles.barName, isLeader && { color }]}
+                  numberOfLines={1}
+                >
+                  {player.name}
+                </Text>
+                {/* Bar */}
+                <View style={styles.barTrack}>
+                  <View
+                    style={[
+                      styles.barFill,
+                      {
+                        flex: ratio,
+                        backgroundColor: isLeader ? color : color + '70',
+                      },
+                    ]}
+                  />
+                  <View style={{ flex: 1 - ratio }} />
+                </View>
+                <Text style={[styles.barScore, isLeader && { color }]}>
+                  {formatNumber(player.score, locale)}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Round history */}
+        {roundResults.length > 0 && (
+          <>
+            <Text style={[styles.sectionLabel, styles.sectionGap]}>
+              {t('game.roundSummary.history')}
+            </Text>
+            <View style={styles.card}>
+              <View style={styles.historyRow}>
+                {Array.from({ length: totalRounds }, (_, i) => {
+                  const result = roundResults.find(r => r.roundNumber === i + 1);
+                  if (!result) {
+                    return (
+                      <View key={i} style={styles.historyDot}>
+                        <View style={[styles.historyCircle, { backgroundColor: colors.border }]} />
+                        <Text style={styles.historyNum}>{i + 1}</Text>
+                      </View>
+                    );
+                  }
+                  const winnerIdx = players.findIndex(p => p.playerId === result.winnerId);
+                  const color = getPlayerColor(winnerIdx);
+                  return (
+                    <View key={i} style={styles.historyDot}>
+                      <View style={[styles.historyCircle, { backgroundColor: color }]} />
+                      <Text style={[styles.historyNum, { color }]}>{i + 1}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Colour legend */}
+              <View style={styles.legend}>
+                {players.map((p, idx) => (
+                  <View key={p.playerId} style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: getPlayerColor(idx) }]} />
+                    <Text style={styles.legendText} numberOfLines={1}>{p.name}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-          );
-        })}
+          </>
+        )}
       </ScrollView>
 
+      {/* ── Action buttons ── */}
       <View style={styles.actions}>
         {!isGameOver && (
-          <SummaryButton label={t('game.roundSummary.nextRound')} onPress={onNextRound} primary testID="btn-next-round" />
+          <ActionButton
+            label={t('game.roundSummary.nextRound')}
+            onPress={onNextRound}
+            primary
+            testID="btn-next-round"
+          />
         )}
         {isGameOver && (
           <>
-            <SummaryButton label={t('game.roundSummary.playAgain')} onPress={onPlayAgain} primary testID="btn-play-again" />
-            <SummaryButton label={t('game.roundSummary.gameOver')} onPress={onNewGame} testID="btn-game-over" />
+            <ActionButton
+              label={t('game.roundSummary.playAgain')}
+              onPress={onPlayAgain}
+              primary
+              testID="btn-play-again"
+            />
+            <ActionButton
+              label={t('game.roundSummary.gameOver')}
+              onPress={onNewGame}
+              testID="btn-game-over"
+            />
           </>
         )}
       </View>
@@ -90,93 +255,250 @@ export function RoundSummaryOverlay({
   );
 }
 
-interface SummaryButtonProps {
+// ─── Action button ────────────────────────────────────────────────────────────
+
+function ActionButton({
+  label,
+  onPress,
+  primary = false,
+  testID,
+}: {
   label: string;
   onPress(): void;
   primary?: boolean;
   testID?: string;
-}
-
-function SummaryButton({ label, onPress, primary = false, testID }: SummaryButtonProps) {
+}) {
   return (
     <Pressable
       style={[styles.button, primary ? styles.primaryButton : styles.secondaryButton]}
       onPress={onPress}
       testID={testID}
     >
-      <Text style={[styles.buttonText, !primary && styles.secondaryButtonText]}>{label}</Text>
+      <Text style={[styles.buttonText, !primary && styles.secondaryButtonText]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const DOT_SIZE = 10;
+const HISTORY_CIRCLE = 26;
+const BAR_HEIGHT = 10;
 
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-    gap: spacing.md,
     zIndex: 200,
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
+
+  // Header
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   title: {
     ...typography.heading,
     color: colors.text.primary,
     textAlign: 'center',
   },
-  sectionLabel: {
-    ...typography.label,
-    color: colors.text.secondary,
-  },
-  scoreList: {
-    width: '100%',
-    maxHeight: 240,
-  },
-  scoreContent: {
-    gap: spacing.sm,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  winnerBanner: {
     alignItems: 'center',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surface,
-  },
-  winnerRow: {
-    backgroundColor: colors.accent + '33',
+    backgroundColor: colors.accent + '1A',
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.accent + '55',
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
-  playerName: {
+  winnerBannerLabel: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  winnerBannerName: {
+    ...typography.label,
+    color: colors.accent,
+    fontWeight: '700',
+    fontSize: 18,
+    marginTop: 2,
+  },
+
+  // Scroll
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: spacing.md,
+  },
+
+  // Section labels
+  sectionLabel: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.xs,
+    fontWeight: '600',
+  },
+  sectionGap: {
+    marginTop: spacing.md,
+  },
+
+  // Cards (section containers)
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+  },
+
+  // Shared row elements
+  dot: {
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
+    marginRight: spacing.sm,
+    flexShrink: 0,
+  },
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border + '66',
+  },
+  spacer: {
+    flex: 1,
+  },
+
+  // This-round rows
+  roundRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  rowName: {
     ...typography.label,
     color: colors.text.primary,
     flex: 1,
+    marginRight: spacing.xs,
   },
-  penaltyText: {
-    ...typography.caption,
-    color: colors.text.secondary,
-    marginHorizontal: spacing.sm,
+  winnerPill: {
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 1,
+    flexShrink: 0,
   },
-  totalText: {
+  winnerPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  penaltyValue: {
     ...typography.label,
     color: colors.text.secondary,
+    textAlign: 'right',
+    flexShrink: 0,
   },
-  winnerText: {
-    color: colors.accent,
+
+  // Bar chart rows
+  barRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
   },
+  barName: {
+    ...typography.caption,
+    color: colors.text.primary,
+    width: 72,
+    flexShrink: 0,
+  },
+  barTrack: {
+    flex: 1,
+    height: BAR_HEIGHT,
+    borderRadius: BAR_HEIGHT / 2,
+    backgroundColor: colors.border + '50',
+    flexDirection: 'row',
+    overflow: 'hidden',
+    marginHorizontal: spacing.xs,
+  },
+  barFill: {
+    borderRadius: BAR_HEIGHT / 2,
+  },
+  barScore: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    width: 36,
+    textAlign: 'right',
+    flexShrink: 0,
+    fontWeight: '600',
+  },
+
+  // Round history
+  historyRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  historyDot: {
+    alignItems: 'center',
+    gap: 3,
+  },
+  historyCircle: {
+    width: HISTORY_CIRCLE,
+    height: HISTORY_CIRCLE,
+    borderRadius: HISTORY_CIRCLE / 2,
+  },
+  historyNum: {
+    ...typography.tiny,
+    color: colors.text.secondary,
+    fontWeight: '600',
+  },
+
+  // Legend
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingBottom: spacing.sm,
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.border + '66',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    ...typography.tiny,
+    color: colors.text.secondary,
+    maxWidth: 80,
+  },
+
+  // Action buttons
   actions: {
     gap: spacing.sm,
-    width: '100%',
-    alignItems: 'center',
+    paddingTop: spacing.sm,
   },
   button: {
     borderRadius: radii.md,
-    paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     alignItems: 'center',
-    width: '100%',
   },
   primaryButton: {
     backgroundColor: colors.accent,
@@ -188,7 +510,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...typography.label,
-    color: colors.surface,
+    color: colors.background,
     fontWeight: '700',
   },
   secondaryButtonText: {

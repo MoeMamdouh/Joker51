@@ -64,12 +64,18 @@
     },
     "roundSummary": {
       "title": "Round {{round}} Complete",
+      "gameOverTitle": "Game Over!",
       "penalty": "Penalty: {{points}} pts",
       "nextRound": "Next Round",
-      "gameOver": "Game Over",
+      "gameOver": "New Game",
       "playAgain": "Play Again",
       "winner": "Round Winner",
-      "coWinners": "Round Co-Winners"
+      "coWinners": "Round Co-Winners",
+      "champion": "Champion",
+      "thisRound": "This Round",
+      "standings": "Standings",
+      "history": "Round History",
+      "pts": "pts"
     },
     "score": {
       "label": "{{name}}: {{score}}"

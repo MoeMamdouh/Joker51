@@ -69,6 +69,81 @@ describe('validateCombination — sequences', () => {
       .map(r => c(r, Suit.HEARTS));
     expect(validateCombination(cards, { isInitialMeld: false }).valid).toBe(true);
   });
+
+  // ─── Ace-after-Joker-as-King fix ─────────────────────────────────────────────
+
+  it('valid: J-Q-Joker-A (Joker as King, ace high)', () => {
+    const result = validateCombination(
+      [c(Rank.JACK, Suit.HEARTS), c(Rank.QUEEN, Suit.HEARTS), joker(), c(Rank.ACE, Suit.HEARTS)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('valid: 10-J-Q-Joker-A (Joker as King)', () => {
+    const result = validateCombination(
+      [c(Rank.TEN, Suit.HEARTS), c(Rank.JACK, Suit.HEARTS), c(Rank.QUEEN, Suit.HEARTS), joker(), c(Rank.ACE, Suit.HEARTS)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('valid: J-Joker-Joker-A (two Jokers as Q and K)', () => {
+    const result = validateCombination(
+      [c(Rank.JACK, Suit.HEARTS), joker(), joker(), c(Rank.ACE, Suit.HEARTS)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('valid: Joker-Q-K-A (Joker as J, natural K, ace high)', () => {
+    const result = validateCombination(
+      [joker(), c(Rank.QUEEN, Suit.HEARTS), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('valid: J-Joker-K-A (Joker as Q, natural K, ace high)', () => {
+    const result = validateCombination(
+      [c(Rank.JACK, Suit.HEARTS), joker(), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.HEARTS)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('invalid: A-2-3 still valid as ace-low (regression)', () => {
+    const result = validateCombination(
+      [c(Rank.ACE, Suit.SPADES), c(Rank.TWO, Suit.SPADES), c(Rank.THREE, Suit.SPADES)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('valid: A-2-Joker (Joker as 3, ace-low — regression)', () => {
+    const result = validateCombination(
+      [c(Rank.ACE, Suit.SPADES), c(Rank.TWO, Suit.SPADES), joker()],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('valid: A-Joker-3 (Joker as 2, ace-low — regression)', () => {
+    const result = validateCombination(
+      [c(Rank.ACE, Suit.SPADES), joker(), c(Rank.THREE, Suit.SPADES)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('invalid: K-A-2 remains invalid (no wrap-around — regression)', () => {
+    const result = validateCombination(
+      [c(Rank.KING, Suit.SPADES), c(Rank.ACE, Suit.SPADES), c(Rank.TWO, Suit.SPADES)],
+      { isInitialMeld: false }
+    );
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('SEQUENCE_NOT_CONSECUTIVE');
+  });
 });
 
 // ─── Set validation ───────────────────────────────────────────────────────────
@@ -169,6 +244,18 @@ describe('calculateMeldPoints', () => {
     const c1 = [c(Rank.TWO, Suit.CLUBS), c(Rank.THREE, Suit.CLUBS), c(Rank.FOUR, Suit.CLUBS)]; // 9
     const c2 = [c(Rank.KING, Suit.SPADES), c(Rank.KING, Suit.HEARTS), c(Rank.KING, Suit.DIAMONDS)]; // 30
     expect(calculateMeldPoints([c1, c2])).toBe(39);
+  });
+
+  it('Joker in J-Q-Joker-A scores as King (10 pts)', () => {
+    // J=10, Q=10, Joker(K)=10, A=11 → total=41
+    const combo = [c(Rank.JACK, Suit.HEARTS), c(Rank.QUEEN, Suit.HEARTS), joker(), c(Rank.ACE, Suit.HEARTS)];
+    expect(calculateMeldPoints([combo])).toBe(41);
+  });
+
+  it('Joker in 10-J-Q-Joker-A scores as King (10 pts)', () => {
+    // 10=10, J=10, Q=10, Joker(K)=10, A=11 → total=51
+    const combo = [c(Rank.TEN, Suit.HEARTS), c(Rank.JACK, Suit.HEARTS), c(Rank.QUEEN, Suit.HEARTS), joker(), c(Rank.ACE, Suit.HEARTS)];
+    expect(calculateMeldPoints([combo])).toBe(51);
   });
 });
 

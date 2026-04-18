@@ -1,5 +1,5 @@
 import { ActionResult, Card, Combination, GameState, Rank, RANK_ORDER, Suit, TurnPhase } from '../types';
-import { validateCombination } from '../validation';
+import { validateCombination, isAceHigh } from '../validation';
 import { sortCombinationCards } from '../sort';
 
 const ALL_SUITS: Suit[] = [Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS];
@@ -109,9 +109,8 @@ export function claimJoker(
   // Determine rank of each Joker by its position relative to surrounding natural cards,
   // then find the Joker whose rank matches realCard.rank.
   const nonJokersSeq = combo.cards.filter(c => !c.isJoker);
-  const seqAceHigh =
-    nonJokersSeq.some(c => c.rank === Rank.ACE) &&
-    nonJokersSeq.some(c => c.rank === Rank.KING);
+  const seqJokerCount = combo.cards.filter(c => c.isJoker).length;
+  const seqAceHigh = isAceHigh(nonJokersSeq as Card[], seqJokerCount);
   const seqRankIdx = (rank: Rank): number => {
     if (rank === Rank.ACE && seqAceHigh) return 13;
     return RANK_ORDER.indexOf(rank);
@@ -141,8 +140,11 @@ export function claimJoker(
     let rankVIdx: number | null = null;
     if (prevVIdx !== null) rankVIdx = prevVIdx + prevOffset;
     else if (nextVIdx !== null) rankVIdx = nextVIdx - nextOffset;
-    if (rankVIdx === null || rankVIdx < 0 || rankVIdx >= RANK_ORDER.length) continue;
-    if (RANK_ORDER[rankVIdx] === realCard.rank) {
+    // Virtual index 13 = Ace-high (after King). Anything beyond is invalid.
+    if (rankVIdx === null || rankVIdx < 0 || rankVIdx > RANK_ORDER.length) continue;
+    const jokerRankAtPos = rankVIdx >= RANK_ORDER.length ? Rank.ACE : RANK_ORDER[rankVIdx];
+    if (!jokerRankAtPos) continue;
+    if (jokerRankAtPos === realCard.rank) {
       targetJokerIndex = jPos;
       break;
     }

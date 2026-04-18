@@ -1,4 +1,5 @@
 import { Card, Rank, RANK_ORDER, Suit } from './types';
+import { isAceHigh } from './validation';
 
 const SUIT_ORDER: Suit[] = [Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS];
 
@@ -23,8 +24,7 @@ function sortSequence(cards: readonly Card[]): Card[] {
 
   if (naturals.length === 0) return [...cards];
 
-  const aceHigh = naturals.some(card => card.rank === Rank.ACE) &&
-                  naturals.some(card => card.rank === Rank.KING);
+  const aceHigh = isAceHigh(naturals, jokerCount);
 
   const rankIdx = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;
@@ -35,32 +35,50 @@ function sortSequence(cards: readonly Card[]): Card[] {
 
   if (jokerCount === 0) return sorted;
 
-  // Identify internal gaps within the natural range
+  // Preserve leading Jokers (before first natural in original order) and
+  // trailing Jokers (after last natural). This keeps the intended rank of a
+  // boundary Joker: [Joker, Q, K] stays [Joker, Q, K] (Joker = J), while
+  // [Q, K, Joker] stays [Q, K, Joker] (Joker = A).
+  let leadingCount = 0;
+  for (const card of cards) {
+    if (card.isJoker) leadingCount++;
+    else break;
+  }
+  let trailingCount = 0;
+  for (let i = cards.length - 1; i >= 0; i--) {
+    if (cards[i].isJoker) trailingCount++;
+    else break;
+  }
+  // Jokers sandwiched between naturals fill internal gaps
+  const internalCount = jokerCount - leadingCount - trailingCount;
+
   const minIdx = rankIdx(sorted[0].rank as Rank);
   const maxIdx = rankIdx(sorted[sorted.length - 1].rank as Rank);
   const naturalSet = new Set(sorted.map(card => rankIdx(card.rank as Rank)));
 
   const internalGapCount = (maxIdx - minIdx + 1) - naturals.length;
-  const internalJokers = Math.min(jokerCount, internalGapCount);
-  const boundaryJokers = jokerCount - internalJokers;
+  // Use as many internal Jokers as there are gaps; any leftovers fall to trailing
+  const internalJokers = Math.min(Math.max(internalCount, 0), internalGapCount);
 
-  // Merge naturals and gap Jokers in slot order
-  const result: Card[] = [];
+  const jokerCard = (): Card => ({ rank: null, suit: null, isJoker: true });
+  const result: Card[] = Array.from({ length: leadingCount }, jokerCard);
+
   let natPtr = 0;
   let gapFilled = 0;
-
   for (let slot = minIdx; slot <= maxIdx; slot++) {
     if (naturalSet.has(slot)) {
       result.push(sorted[natPtr++]);
     } else if (gapFilled < internalJokers) {
-      result.push({ rank: null, suit: null, isJoker: true });
+      result.push(jokerCard());
       gapFilled++;
     }
   }
 
-  // Append boundary Jokers at the end
-  for (let i = 0; i < boundaryJokers; i++) {
-    result.push({ rank: null, suit: null, isJoker: true });
+  // Trailing Jokers (explicit + any internal that had no gap to fill)
+  const explicitTrailing = trailingCount;
+  const overflow = Math.max(internalCount - gapFilled, 0);
+  for (let i = 0; i < explicitTrailing + overflow; i++) {
+    result.push(jokerCard());
   }
 
   return result;
