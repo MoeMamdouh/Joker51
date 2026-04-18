@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { CardTile } from './CardTile';
+import { getJokerRankLabel } from './jokerPlacement';
 import { colors, typography, spacing, radii } from '../../theme/tokens';
 import { Card, Combination } from '../../engine/types';
 
@@ -26,16 +27,24 @@ export function CombinationRow({
     <View style={styles.container} testID={testID ?? `combination-row-${combination.id}`}>
       <Text style={styles.ownerLabel}>{ownerName}</Text>
       <Pressable onPress={onPress} disabled={!onPress} style={styles.cardsRow}>
-        {combination.cards.map((card, index) => (
-          <View key={index} style={styles.cardWrapper}>
-            <CardTile card={card} size="sm" />
-            {index === claimJokerCardIndex && onClaimJoker && (
-              <Pressable style={styles.claimBadge} onPress={onClaimJoker} testID="claim-joker-badge">
-                <Text style={styles.claimText}>↩</Text>
-              </Pressable>
-            )}
-          </View>
-        ))}
+        {combination.cards.map((card, index) => {
+          const jokerLabel = combination.type === 'sequence' && card.isJoker
+            ? getJokerRankLabel(combination.cards, index)
+            : null;
+          return (
+            <View key={index} style={[styles.cardWrapper, jokerLabel !== null && styles.jokerCardWrapper]}>
+              <CardTile card={card} size="sm" />
+              {jokerLabel !== null && (
+                <Text style={styles.jokerLabel}>{jokerLabel}</Text>
+              )}
+              {index === claimJokerCardIndex && onClaimJoker && (
+                <Pressable style={styles.claimBadge} onPress={onClaimJoker} testID="claim-joker-badge">
+                  <Text style={styles.claimText}>↩</Text>
+                </Pressable>
+              )}
+            </View>
+          );
+        })}
       </Pressable>
     </View>
   );
@@ -56,6 +65,16 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     position: 'relative',
+  },
+  jokerCardWrapper: {
+    alignItems: 'center',
+  },
+  jokerLabel: {
+    ...typography.caption,
+    color: colors.card.joker,
+    marginTop: 2,
+    fontSize: 9,
+    lineHeight: 11,
   },
   claimBadge: {
     position: 'absolute',

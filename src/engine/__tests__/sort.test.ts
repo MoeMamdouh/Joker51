@@ -49,12 +49,29 @@ describe('sortCombinationCards — sequence', () => {
     expect(result[2].isJoker).toBe(true);
   });
 
-  it('boundary Joker (no internal gap) with different input order', () => {
-    // 6♠ 7♠ with 1 boundary Joker — Joker appended at end
+  it('leading boundary Joker preserved at start (represents rank below first natural)', () => {
+    // [Joker, 6♠, 7♠] — Joker is leading (represents 5), must stay at index 0
     const cards = [joker(), mk(Rank.SIX, Suit.SPADES), mk(Rank.SEVEN, Suit.SPADES)];
     const result = sortCombinationCards(cards, 'sequence');
-    expect(result[0].rank).toBe(Rank.SIX);
-    expect(result[1].rank).toBe(Rank.SEVEN);
+    expect(result[0].isJoker).toBe(true);
+    expect(result[1].rank).toBe(Rank.SIX);
+    expect(result[2].rank).toBe(Rank.SEVEN);
+  });
+
+  it('leading boundary Joker preserved for [Joker, Q, K] (Joker = J)', () => {
+    // User chose "Joker as J" — sort must keep Joker at the start
+    const cards = [joker(), mk(Rank.QUEEN, Suit.SPADES), mk(Rank.KING, Suit.SPADES)];
+    const result = sortCombinationCards(cards, 'sequence');
+    expect(result[0].isJoker).toBe(true);
+    expect(result[1].rank).toBe(Rank.QUEEN);
+    expect(result[2].rank).toBe(Rank.KING);
+  });
+
+  it('trailing boundary Joker stays at end for [Q, K, Joker] (Joker = A)', () => {
+    const cards = [mk(Rank.QUEEN, Suit.SPADES), mk(Rank.KING, Suit.SPADES), joker()];
+    const result = sortCombinationCards(cards, 'sequence');
+    expect(result[0].rank).toBe(Rank.QUEEN);
+    expect(result[1].rank).toBe(Rank.KING);
     expect(result[2].isJoker).toBe(true);
   });
 });

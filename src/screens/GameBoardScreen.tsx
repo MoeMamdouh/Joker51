@@ -17,7 +17,7 @@ import { StagedMeldPreview } from '../components/game/StagedMeldPreview';
 import { RoundSummaryOverlay } from '../components/game/RoundSummaryOverlay';
 import { ScoreboardModal } from '../components/game/ScoreboardModal';
 import { JokerPlacementSheet, JokerSequenceOption } from '../components/game/JokerPlacementSheet';
-import { computeJokerSequenceOptions } from '../components/game/jokerPlacement';
+import { computeJokerSequenceOptions, computeJokerLayOffOptions } from '../components/game/jokerPlacement';
 import { colors, spacing, typography, radii } from '../theme/tokens';
 import { Card, Combination, GameStatus, TurnPhase } from '../engine/types';
 import { validateCombination, calculateMeldPoints, getClaimableJokerCards, getClaimableJokerIndex } from '../engine';
@@ -48,6 +48,8 @@ export function GameBoardScreen() {
   const [stagedCombinations, setStagedCombinations] = useState<Card[][]>([]);
   const [jokerOptions, setJokerOptions] = useState<JokerSequenceOption[]>([]);
   const [pendingJokerCards, setPendingJokerCards] = useState<Card[] | null>(null);
+  const [jokerLayOffOptions, setJokerLayOffOptions] = useState<JokerSequenceOption[]>([]);
+  const [pendingJokerLayOffComboId, setPendingJokerLayOffComboId] = useState<string | null>(null);
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function showError(msg: string) {
@@ -245,9 +247,47 @@ export function GameBoardScreen() {
 
   function handleLayOff(combinationId: string) {
     if (selectedCards.length === 0) return;
-    const result = actions.layOffCard(selectedCards[0], combinationId);
+    const card = selectedCards[0];
+
+    // Joker layoff on a sequence: compute valid boundary positions and show modal if ambiguous
+    if (card.isJoker) {
+      const combo = orderedCombinations.find(c => c.id === combinationId);
+      if (combo && combo.type === 'sequence') {
+        const options = computeJokerLayOffOptions(combo);
+        if (options.length > 1) {
+          setPendingJokerLayOffComboId(combinationId);
+          setJokerLayOffOptions(options);
+          return;
+        }
+        if (options.length === 1) {
+          const jokerPosition: 'start' | 'end' = options[0].cards[0].isJoker ? 'start' : 'end';
+          const result = actions.layOffCard(card, combinationId, jokerPosition);
+          if (result.error) showError(result.error);
+          else clearSelection();
+          return;
+        }
+      }
+    }
+
+    const result = actions.layOffCard(card, combinationId);
     if (result.error) showError(result.error);
     else clearSelection();
+  }
+
+  function handleJokerLayOffConfirm(option: JokerSequenceOption) {
+    if (!pendingJokerLayOffComboId) return;
+    const jokerPosition: 'start' | 'end' = option.cards[0].isJoker ? 'start' : 'end';
+    const jokerCard: Card = { rank: null, suit: null, isJoker: true };
+    const result = actions.layOffCard(jokerCard, pendingJokerLayOffComboId, jokerPosition);
+    setJokerLayOffOptions([]);
+    setPendingJokerLayOffComboId(null);
+    if (result.error) showError(result.error);
+    else clearSelection();
+  }
+
+  function handleJokerLayOffDismiss() {
+    setJokerLayOffOptions([]);
+    setPendingJokerLayOffComboId(null);
   }
 
   function handleClaimJoker(combinationId: string) {
@@ -416,6 +456,13 @@ export function GameBoardScreen() {
         options={jokerOptions}
         onConfirm={handleJokerPlacementConfirm}
         onDismiss={handleJokerPlacementDismiss}
+      />
+
+      <JokerPlacementSheet
+        visible={jokerLayOffOptions.length > 0}
+        options={jokerLayOffOptions}
+        onConfirm={handleJokerLayOffConfirm}
+        onDismiss={handleJokerLayOffDismiss}
       />
 
       {showRoundSummary && (

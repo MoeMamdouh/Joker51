@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../engine/types';
 import { CardTile } from './CardTile';
+import { getJokerRankLabel } from './jokerPlacement';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
 
 interface StagedMeldPreviewProps {
@@ -33,14 +34,21 @@ export function StagedMeldPreview({
             style={[styles.combo, comboIdx > 0 && styles.comboSeparator]}
             testID={`staged-combo-${comboIdx}`}
           >
-            {combo.map((card, cardIdx) => (
-              <CardTile
-                key={cardIdx}
-                card={card}
-                size="sm"
-                testID={`staged-card-${comboIdx}-${cardIdx}`}
-              />
-            ))}
+            {combo.map((card, cardIdx) => {
+              const jokerLabel = card.isJoker ? getJokerRankLabel(combo, cardIdx) : null;
+              return (
+                <View key={cardIdx} style={card.isJoker ? styles.jokerWrapper : undefined}>
+                  <CardTile
+                    card={card}
+                    size="sm"
+                    testID={`staged-card-${comboIdx}-${cardIdx}`}
+                  />
+                  {jokerLabel !== null && (
+                    <Text style={styles.jokerLabel}>{jokerLabel}</Text>
+                  )}
+                </View>
+              );
+            })}
           </View>
         ))}
       </ScrollView>
@@ -75,6 +83,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+  },
+  jokerWrapper: {
+    alignItems: 'center',
+  },
+  jokerLabel: {
+    ...typography.caption,
+    color: colors.card.joker,
+    marginTop: 2,
+    fontSize: 9,
+    lineHeight: 11,
   },
   comboSeparator: {
     marginLeft: spacing.md,

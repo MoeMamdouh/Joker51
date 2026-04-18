@@ -2,6 +2,25 @@ import { Card, Combination, EngineErrorCode, Rank, RANK_ORDER, RANK_POINTS, Suit
 
 const ALL_SUITS: Suit[] = [Suit.SPADES, Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS];
 
+// ─── Ace-high detection ───────────────────────────────────────────────────────
+
+/**
+ * Returns true when Ace should be treated as rank index 13 (high, after King).
+ * Ace is high when:
+ *   - a natural King is present, OR
+ *   - the highest non-Ace rank + available Jokers can reach King (index 12),
+ *     meaning a Joker represents King and Ace is the natural continuation.
+ */
+export function isAceHigh(nonJokers: Card[], jokerCount: number): boolean {
+  if (!nonJokers.some(c => c.rank === Rank.ACE)) return false;
+  if (nonJokers.some(c => c.rank === Rank.KING)) return true;
+  const nonAceRankIndices = nonJokers
+    .filter(c => c.rank !== Rank.ACE)
+    .map(c => RANK_ORDER.indexOf(c.rank as Rank));
+  const maxNonAce = nonAceRankIndices.length > 0 ? Math.max(...nonAceRankIndices) : -1;
+  return maxNonAce >= 0 && maxNonAce + jokerCount >= RANK_ORDER.indexOf(Rank.KING);
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -40,7 +59,7 @@ export function getClaimableJokerIndex(
   const suit = nonJokers[0]?.suit;
   if (!suit) return -1;
 
-  const aceHigh = nonJokers.some(c => c.rank === Rank.ACE) && nonJokers.some(c => c.rank === Rank.KING);
+  const aceHigh = isAceHigh(nonJokers, combination.cards.filter(c => c.isJoker).length);
   const seqRankIdx = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;
     return RANK_ORDER.indexOf(rank);
@@ -69,8 +88,9 @@ export function getClaimableJokerIndex(
     let rankVIdx: number | null = null;
     if (prevVIdx !== null) rankVIdx = prevVIdx + prevOffset;
     else if (nextVIdx !== null) rankVIdx = nextVIdx - nextOffset;
-    if (rankVIdx === null || rankVIdx < 0 || rankVIdx >= RANK_ORDER.length) continue;
-    const jokerRank = RANK_ORDER[rankVIdx];
+    // Virtual index 13 = Ace-high (after King). Anything beyond is invalid.
+    if (rankVIdx === null || rankVIdx < 0 || rankVIdx > RANK_ORDER.length) continue;
+    const jokerRank = rankVIdx >= RANK_ORDER.length ? Rank.ACE : RANK_ORDER[rankVIdx];
     if (!jokerRank) continue;
     const needed: Card = { rank: jokerRank, suit, isJoker: false };
     if (playerHand.some(h => !h.isJoker && h.rank === needed.rank && h.suit === needed.suit)) {
@@ -110,7 +130,7 @@ export function getClaimableJokerCards(
   const suit = nonJokers[0]?.suit;
   if (!suit) return null;
 
-  const aceHigh = nonJokers.some(c => c.rank === Rank.ACE) && nonJokers.some(c => c.rank === Rank.KING);
+  const aceHigh = isAceHigh(nonJokers, combination.cards.filter(c => c.isJoker).length);
   const rankIdx = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;
     return RANK_ORDER.indexOf(rank);
@@ -143,8 +163,9 @@ export function getClaimableJokerCards(
     if (prevVIdx !== null) rankVIdx = prevVIdx + prevOffset;
     else if (nextVIdx !== null) rankVIdx = nextVIdx - nextOffset;
 
-    if (rankVIdx === null || rankVIdx < 0 || rankVIdx >= RANK_ORDER.length) continue;
-    const jokerRank = RANK_ORDER[rankVIdx];
+    // Virtual index 13 = Ace-high (after King). Anything beyond is invalid.
+    if (rankVIdx === null || rankVIdx < 0 || rankVIdx > RANK_ORDER.length) continue;
+    const jokerRank = rankVIdx >= RANK_ORDER.length ? Rank.ACE : RANK_ORDER[rankVIdx];
     if (!jokerRank) continue;
 
     const needed: Card = { rank: jokerRank, suit, isJoker: false };
@@ -223,15 +244,12 @@ function validateAsSequence(cards: Card[]): { valid: boolean; error?: EngineErro
   }
 
   const jokerCount = cards.length - nonJokers.length;
-  const hasAce = nonJokers.some(c => c.rank === Rank.ACE);
-  const hasKing = nonJokers.some(c => c.rank === Rank.KING);
 
-  // Remap Ace to virtual index 13 when it appears alongside KING (Ace-high).
-  // No explicit wraparound guard is needed: the span/gap check below already
-  // rejects true wraparounds (e.g. K-A-2 has span=12, gaps=10, jokerCount=0 →
-  // SEQUENCE_NOT_CONSECUTIVE) and correctly accepts long Ace-high runs like
-  // 9-10-J-Q-K-A (gaps match joker count).
-  const aceHigh = hasAce && hasKing;
+  // Remap Ace to virtual index 13 when it can be a high card (after King).
+  // isAceHigh detects this even when King is represented by a Joker, not just
+  // when a natural King is present. The span/gap check below still rejects
+  // true wraparounds (e.g. K-A-2 → span/gap mismatch) automatically.
+  const aceHigh = isAceHigh(nonJokers, jokerCount);
   const rankIndex = (rank: Rank): number => {
     if (rank === Rank.ACE && aceHigh) return 13;
     return RANK_ORDER.indexOf(rank);
@@ -288,7 +306,11 @@ export function jokerSubstitutedValue(cards: Card[], jokerIndex: number): number
   const nonJokers = cards.filter(c => !c.isJoker);
   if (nonJokers.length === 0) return 0;
 
-  const rankIndices = nonJokers.map(c => RANK_ORDER.indexOf(c.rank as Rank)).sort((a, b) => a - b);
+  const jokerCount = cards.filter(c => c.isJoker).length;
+  const aceHigh = isAceHigh(nonJokers, jokerCount);
+  const rankIdx = (rank: Rank): number =>
+    rank === Rank.ACE && aceHigh ? 13 : RANK_ORDER.indexOf(rank);
+  const rankIndices = nonJokers.map(c => rankIdx(c.rank as Rank)).sort((a, b) => a - b);
   const min = rankIndices[0];
   const max = rankIndices[rankIndices.length - 1];
 

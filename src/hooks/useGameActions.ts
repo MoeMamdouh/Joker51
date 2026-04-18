@@ -42,7 +42,7 @@ interface UseGameActionsReturn {
   drawFromPile(): GameActionResult;
   pickUpDiscardTop(): GameActionResult;
   placeMeld(combinations: Card[][]): GameActionResult;
-  layOffCard(card: Card, combinationId: string): GameActionResult;
+  layOffCard(card: Card, combinationId: string, jokerPosition?: 'start' | 'end'): GameActionResult;
   discardCard(card: Card): GameActionResult;
   claimJokerFromCombination(combinationId: string, realCards: Card[]): GameActionResult;
   startNextRound(): GameActionResult;
@@ -96,12 +96,13 @@ export function useGameActions(): UseGameActionsReturn {
     return { error: null };
   }
 
-  function layOffCard(card: Card, combinationId: string): GameActionResult {
+  function layOffCard(card: Card, combinationId: string, jokerPosition?: 'start' | 'end'): GameActionResult {
     if (!currentGame) return { error: null };
     const result = layOff(currentGame, {
       playerId: currentGame.turnState.activePlayerId,
       card,
       combinationId,
+      jokerPosition,
     });
     if (!result.success || !result.state) return errorResult(result.error!);
     persist(result.state);
