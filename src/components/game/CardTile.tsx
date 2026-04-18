@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
+  withRepeat,
 } from 'react-native-reanimated';
 import { Card, Rank, Suit } from '../../engine/types';
 import {
@@ -51,6 +53,8 @@ interface CardTileProps {
   size?: 'sm' | 'md' | 'lg';
   /** Override the active card style — used by CardStylePicker previews. */
   styleOverride?: CardStyleId;
+  /** Newly drawn card — shows a pulsing accent border overlay */
+  isNew?: boolean;
   testID?: string;
 }
 
@@ -62,6 +66,7 @@ export function CardTile({
   onPress,
   size = 'md',
   styleOverride,
+  isNew = false,
   testID,
 }: CardTileProps) {
   const dimensions = cardSizes[size];
@@ -75,12 +80,28 @@ export function CardTile({
   const showNumberCardCenterSuit = isMinimal;
   const styleDef = { faceCardCenterBg, faceCardCenterTextColor, showNumberCardCenterSuit };
 
+  const pulse = useSharedValue(0);
+
+  useEffect(() => {
+    if (isNew && !dimmed) {
+      pulse.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
+    } else {
+      pulse.value = withTiming(0, { duration: 200 });
+    }
+  }, [isNew, dimmed, pulse]);
+
   const liftStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: withTiming(selected ? -8 : 0, { duration: 150 }) }],
   }));
 
   const dimStyle = useAnimatedStyle(() => ({
     opacity: withTiming(dimmed ? 0.35 : 1.0, { duration: 150 }),
+  }));
+
+  // Absolutely-positioned border overlay: borderWidth is always 2 (never changes),
+  // only opacity pulses. No layout shift possible.
+  const newBorderOverlayStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
   }));
 
   const isRed = card.suit !== null && RED_SUITS.includes(card.suit);
@@ -195,6 +216,11 @@ export function CardTile({
       <Pressable onPress={onPress} disabled={!onPress || dimmed}>
         {cardInner}
       </Pressable>
+      {/* Absolutely-positioned border overlay — never affects layout */}
+      <Animated.View
+        style={[styles.newBorderOverlay, { borderRadius: radii.sm }, newBorderOverlayStyle]}
+        pointerEvents="none"
+      />
     </Animated.View>
   );
 }
@@ -272,5 +298,15 @@ const styles = StyleSheet.create({
   },
   centerSm: {
     ...typography.cardCenterSm,
+  },
+  newBorderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 2,
+    borderColor: colors.card.newIndicator,
+    // borderRadius applied inline to match the card variant
   },
 });

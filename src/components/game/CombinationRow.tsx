@@ -8,7 +8,8 @@ interface CombinationRowProps {
   combination: Combination;
   ownerName: string;
   onPress?(): void;
-  showClaimJoker?: boolean;
+  /** Card-array index of the specific Joker the player can claim. */
+  claimJokerCardIndex?: number;
   onClaimJoker?(): void;
   testID?: string;
 }
@@ -17,7 +18,7 @@ export function CombinationRow({
   combination,
   ownerName,
   onPress,
-  showClaimJoker = false,
+  claimJokerCardIndex,
   onClaimJoker,
   testID,
 }: CombinationRowProps) {
@@ -28,7 +29,7 @@ export function CombinationRow({
         {combination.cards.map((card, index) => (
           <View key={index} style={styles.cardWrapper}>
             <CardTile card={card} size="sm" />
-            {card.isJoker && showClaimJoker && onClaimJoker && (
+            {index === claimJokerCardIndex && onClaimJoker && (
               <Pressable style={styles.claimBadge} onPress={onClaimJoker} testID="claim-joker-badge">
                 <Text style={styles.claimText}>↩</Text>
               </Pressable>

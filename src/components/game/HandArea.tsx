@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   GestureDetector,
   Gesture,
@@ -15,7 +15,8 @@ import Animated, {
 import { runOnJS } from 'react-native-worklets';
 import { useTranslation } from 'react-i18next';
 import { CardTile } from './CardTile';
-import { colors, spacing, shadows, zIndex, typography, radii } from '../../theme/tokens';
+import { SegmentedControl } from '../ui/SegmentedControl';
+import { colors, spacing, shadows, zIndex } from '../../theme/tokens';
 import { Card } from '../../engine/types';
 import { useDirection } from '../../contexts/DirectionContext';
 import { useHandOrder } from '../../hooks/useHandOrder';
@@ -30,8 +31,13 @@ const MAX_SCROLL_SPEED = 14;
 
 const GAP_SPRING = { damping: 28, stiffness: 400 };
 
+// Auto-dismiss new card indicator after this many ms
+const NEW_CARD_INDICATOR_TIMEOUT_MS = 3000;
+
 interface HandAreaProps {
   cards: Card[];
+  /** The active player's ID — used to detect turn handoffs and preserve sort mode. */
+  playerId?: string;
   selectedCards: Card[];
   /** Staged cards are dimmed — they're committed to a meld preview. */
   stagedCards?: readonly Card[];
@@ -44,6 +50,7 @@ interface DraggableCardProps {
   totalCards: number;
   selected: boolean;
   dimmed: boolean;
+  isNew: boolean;
   activeIndex: SharedValue<number>;
   dragTranslateX: SharedValue<number>;
   onPress(): void;
@@ -61,6 +68,7 @@ function DraggableCard({
   totalCards,
   selected,
   dimmed,
+  isNew,
   activeIndex,
   dragTranslateX,
   onPress,
@@ -147,6 +155,7 @@ function DraggableCard({
           card={card}
           selected={selected}
           dimmed={dimmed}
+          isNew={isNew}
           size="md"
           onPress={onPress}
           testID={testID}
@@ -156,10 +165,11 @@ function DraggableCard({
   );
 }
 
-export function HandArea({ cards, selectedCards, stagedCards, onCardPress }: HandAreaProps) {
+export function HandArea({ cards, playerId, selectedCards, stagedCards, onCardPress }: HandAreaProps) {
   const { t } = useTranslation();
   const { isRTL } = useDirection();
-  const { orderedCards, moveCard, sortByPower } = useHandOrder(cards);
+  const { orderedCards, moveCard, sortBySuit, sortByRank, sortMode, newCard, clearNewCard } =
+    useHandOrder(cards, playerId);
 
   const [isDragging, setIsDragging] = useState(false);
 
@@ -178,6 +188,43 @@ export function HandArea({ cards, selectedCards, stagedCards, onCardPress }: Han
   const pointerAbsXRef = useRef(0);
   // The setInterval handle for the auto-scroll loop
   const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // New card indicator auto-dismiss timer
+  const newCardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Scroll to start so the new card (prepended at index 0) is immediately visible
+  useEffect(() => {
+    if (newCard !== null) {
+      scrollViewRef.current?.scrollTo({ x: 0, animated: true });
+    }
+  }, [newCard]);
+
+  // Auto-dismiss new card indicator after NEW_CARD_INDICATOR_TIMEOUT_MS
+  useEffect(() => {
+    if (newCardTimerRef.current) {
+      clearTimeout(newCardTimerRef.current);
+      newCardTimerRef.current = null;
+    }
+    if (newCard !== null) {
+      newCardTimerRef.current = setTimeout(() => {
+        clearNewCard();
+        newCardTimerRef.current = null;
+      }, NEW_CARD_INDICATOR_TIMEOUT_MS);
+    }
+    return () => {
+      if (newCardTimerRef.current) {
+        clearTimeout(newCardTimerRef.current);
+        newCardTimerRef.current = null;
+      }
+    };
+  }, [newCard, clearNewCard]);
+
+  // Suppress new card indicator when the card is staged
+  useEffect(() => {
+    if (newCard !== null && stagedCards?.includes(newCard)) {
+      clearNewCard();
+    }
+  }, [stagedCards, newCard, clearNewCard]);
 
   // Clean up interval on unmount
   useEffect(() => {
@@ -246,17 +293,21 @@ export function HandArea({ cards, selectedCards, stagedCards, onCardPress }: Han
     }
   }
 
+  const sortDisabled = isDragging || (stagedCards?.length ?? 0) > 0;
+
   return (
     <GestureHandlerRootView style={styles.rootView}>
       <View style={[styles.toolbar, isRTL && styles.toolbarRTL]}>
-        <Pressable
-          style={styles.sortButton}
-          onPress={sortByPower}
-          testID="sort-hand-button"
-        >
-          <Text style={styles.sortButtonText}>{t('game.actions.sortHand')}</Text>
-          <Text style={styles.sortIcon}>↕</Text>
-        </Pressable>
+        <SegmentedControl
+          options={[
+            { label: t('game.actions.sortBySuit'), value: 'bySuit' },
+            { label: t('game.actions.sortByRank'), value: 'byRank' },
+          ]}
+          value={sortMode}
+          onChange={(v) => (v === 'bySuit' ? sortBySuit() : sortByRank())}
+          disabled={sortDisabled}
+          testID="sort-mode-control"
+        />
       </View>
       <View ref={containerRef} style={styles.rootView}>
         <ScrollView
@@ -272,6 +323,7 @@ export function HandArea({ cards, selectedCards, stagedCards, onCardPress }: Han
         >
           {displayCards.map((card, index) => {
             const isDimmed = stagedCards?.includes(card) ?? false;
+            const isNewCard = card === newCard && !isDimmed;
             return (
               <DraggableCard
                 key={`${card.rank}-${card.suit}-${card.isJoker}-${index}`}
@@ -280,9 +332,13 @@ export function HandArea({ cards, selectedCards, stagedCards, onCardPress }: Han
                 totalCards={displayCards.length}
                 selected={selectedCards.includes(card)}
                 dimmed={isDimmed}
+                isNew={isNewCard}
                 activeIndex={activeIndex}
                 dragTranslateX={dragTranslateX}
-                onPress={() => onCardPress(card)}
+                onPress={() => {
+                  if (isNewCard) clearNewCard();
+                  onCardPress(card);
+                }}
                 onDragActivate={startAutoScroll}
                 onDragSettle={stopAutoScroll}
                 onMoveCard={handleMoveCard}
@@ -310,25 +366,6 @@ const styles = StyleSheet.create({
   toolbarRTL: {
     justifyContent: 'flex-start',
   },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xxs,
-  },
-  sortButtonText: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-  sortIcon: {
-    fontSize: 10,
-    color: colors.text.secondary,
-  },
   content: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -336,5 +373,6 @@ const styles = StyleSheet.create({
   },
   empty: {
     height: 72,
+    backgroundColor: colors.background,
   },
 });

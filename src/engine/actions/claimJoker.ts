@@ -1,4 +1,4 @@
-import { ActionResult, Card, Combination, GameState, Suit, TurnPhase } from '../types';
+import { ActionResult, Card, Combination, GameState, Rank, RANK_ORDER, Suit, TurnPhase } from '../types';
 import { validateCombination } from '../validation';
 import { sortCombinationCards } from '../sort';
 
@@ -47,8 +47,8 @@ export function claimJoker(
   const combo = state.tableState.combinations.find(c => c.id === combinationId);
   if (!combo) return { success: false, error: 'COMBINATION_NOT_ON_TABLE' };
 
-  const jokerIndex = combo.cards.findIndex(c => c.isJoker);
-  if (jokerIndex === -1) return { success: false, error: 'COMBINATION_NOT_ON_TABLE' };
+  const hasAnyJoker = combo.cards.some(c => c.isJoker);
+  if (!hasAnyJoker) return { success: false, error: 'COMBINATION_NOT_ON_TABLE' };
 
   const hand = state.hands.find(h => h.playerId === playerId)!.cards;
 
@@ -98,7 +98,7 @@ export function claimJoker(
     };
   }
 
-  // Sequence: 1-for-1 swap
+  // Sequence: 1-for-1 swap — find which Joker the realCard replaces by position
   if (realCards.length === 0) return { success: false, error: 'JOKER_CLAIM_WRONG_CARD' };
   const realCard = realCards[0];
 
@@ -106,7 +106,51 @@ export function claimJoker(
     return { success: false, error: 'CARD_NOT_IN_HAND' };
   }
 
-  const swappedCardsRaw = combo.cards.map((c, i) => (i === jokerIndex ? realCard : c)) as Card[];
+  // Determine rank of each Joker by its position relative to surrounding natural cards,
+  // then find the Joker whose rank matches realCard.rank.
+  const nonJokersSeq = combo.cards.filter(c => !c.isJoker);
+  const seqAceHigh =
+    nonJokersSeq.some(c => c.rank === Rank.ACE) &&
+    nonJokersSeq.some(c => c.rank === Rank.KING);
+  const seqRankIdx = (rank: Rank): number => {
+    if (rank === Rank.ACE && seqAceHigh) return 13;
+    return RANK_ORDER.indexOf(rank);
+  };
+
+  let targetJokerIndex = -1;
+  for (let jPos = 0; jPos < combo.cards.length; jPos++) {
+    if (!combo.cards[jPos].isJoker) continue;
+    let prevVIdx: number | null = null;
+    let prevOffset = 0;
+    for (let i = jPos - 1; i >= 0; i--) {
+      if (!combo.cards[i].isJoker) {
+        prevVIdx = seqRankIdx(combo.cards[i].rank as Rank);
+        prevOffset = jPos - i;
+        break;
+      }
+    }
+    let nextVIdx: number | null = null;
+    let nextOffset = 0;
+    for (let i = jPos + 1; i < combo.cards.length; i++) {
+      if (!combo.cards[i].isJoker) {
+        nextVIdx = seqRankIdx(combo.cards[i].rank as Rank);
+        nextOffset = i - jPos;
+        break;
+      }
+    }
+    let rankVIdx: number | null = null;
+    if (prevVIdx !== null) rankVIdx = prevVIdx + prevOffset;
+    else if (nextVIdx !== null) rankVIdx = nextVIdx - nextOffset;
+    if (rankVIdx === null || rankVIdx < 0 || rankVIdx >= RANK_ORDER.length) continue;
+    if (RANK_ORDER[rankVIdx] === realCard.rank) {
+      targetJokerIndex = jPos;
+      break;
+    }
+  }
+
+  if (targetJokerIndex === -1) return { success: false, error: 'JOKER_CLAIM_WRONG_CARD' };
+
+  const swappedCardsRaw = combo.cards.map((c, i) => (i === targetJokerIndex ? realCard : c)) as Card[];
   const vr = validateCombination(swappedCardsRaw, { isInitialMeld: false });
   if (!vr.valid) return { success: false, error: 'JOKER_CLAIM_WRONG_CARD' };
   const swappedCards = sortCombinationCards(swappedCardsRaw, 'sequence');

@@ -97,3 +97,21 @@ describe('CardTile — face down', () => {
     expect(queryByText('♥')).toBeNull();
   });
 });
+
+describe('CardTile — isNew indicator', () => {
+  it('renders without error when isNew is true', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} isNew />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders without error when isNew is true and dimmed is true', () => {
+    // dimmed suppresses the glow — card should still render
+    const { getAllByText } = render(<CardTile card={kingOfSpades} isNew dimmed />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders without error when isNew is false (default)', () => {
+    const { getAllByText } = render(<CardTile card={kingOfSpades} />);
+    expect(getAllByText('K').length).toBeGreaterThanOrEqual(1);
+  });
+});
