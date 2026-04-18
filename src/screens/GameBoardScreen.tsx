@@ -468,9 +468,12 @@ export function GameBoardScreen() {
       {showRoundSummary && (
         <RoundSummaryOverlay
           currentRound={currentRound}
+          totalRounds={config.totalRounds}
+          players={playerList}
           cumulativeScores={cumulativeScores}
           roundWinnerIds={roundWinnerIds}
           latestRoundScores={latestRound?.scores ?? []}
+          roundResults={roundResults}
           isGameOver={isGameOver}
           onNextRound={handleNextRound}
           onNewGame={handleNewGame}

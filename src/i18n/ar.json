@@ -64,12 +64,18 @@
     },
     "roundSummary": {
       "title": "الجولة {{round}} خلصت",
+      "gameOverTitle": "اللعبة خلصت!",
       "penalty": "العقوبة: {{points}} نقطة",
       "nextRound": "الدور الجاي",
-      "gameOver": "اللعبة خلصت",
+      "gameOver": "لعبة جديدة",
       "playAgain": "العب تاني",
       "winner": "اللي كسب الجولة",
-      "coWinners": "اللي كسبوا الجولة"
+      "coWinners": "اللي كسبوا الجولة",
+      "champion": "البطل",
+      "thisRound": "هذه الجولة",
+      "standings": "الترتيب",
+      "history": "سجل الجولات",
+      "pts": "نقطة"
     },
     "score": {
       "label": "{{name}}: {{score}}"
